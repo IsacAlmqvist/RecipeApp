@@ -8,7 +8,8 @@ export default function BottomNav({onHomeClick}) {
         <nav style={{
             position: 'fixed', bottom: 0, left: 0, right: 0,
             background: '#fff', borderTop: '1px solid #ccc',
-            display: 'flex', justifyContent: 'space-around', padding: '0.5rem'
+            display: 'flex', justifyContent: 'space-around', padding: '0.5rem',
+            paddingBottom: '26px'
         }}>
             <Link to= "/" onClick={onHomeClick} style={{ fontweight: current === '/' ? 'bold' : 'normal'}}>Hem</Link>
             <Link to= "/addItem" style={{ fontweight: current === '/' ? 'bold' : 'normal'}}>Lägg till</Link>

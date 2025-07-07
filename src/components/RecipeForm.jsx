@@ -1,9 +1,8 @@
 import { useState } from "react";
-import SearchBar from "../components/SearchBar";
-import FoodList from "./FoodList";
 import IngredientList from "./IngredientList";
 import IngredientForm from "./IngredientForm";
 import Modal from "./Modal";
+import SearchedIngredientList from "./SearchedIngredientList";
 
 export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
@@ -83,7 +82,6 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
             console.log("saknas namn");
             return;
         }
-        console.log(form);
 
         onAddRecipe(form);
 
@@ -153,7 +151,7 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
             {searchInput !== '' && 
                 <>
-                    <FoodList listItems = {listItems} selectedIndex={selectedIngredient}
+                    <SearchedIngredientList listItems = {listItems} selectedIndex={selectedIngredient}
                         onSelectItem = {handleIngredientClicked}
                     />
                     <button type="button" className="btn btn-primary mb-3" onClick={onAddNewClicked}>

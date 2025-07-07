@@ -21,7 +21,6 @@ export default function IngredientForm({onAddData, includeAmount = false, initia
             console.log("saknas namn eller enhet");
             return;
         }
-        console.log(form);
 
         onAddData(form);
 

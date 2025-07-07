@@ -1,4 +1,4 @@
-export default function FoodList({listItems, selectedIndex, onSelectItem}) {
+export default function SearchedIngredientList({listItems, selectedIndex, onSelectItem}) {
 
     return (
         <div style={{margin: '0 auto'}} className="mt-4">

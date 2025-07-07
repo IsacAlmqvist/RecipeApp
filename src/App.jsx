@@ -20,21 +20,27 @@ function AppLayout({ isGuestMode }) {
   const [data, setData] = useState({
     foods: [],
     ingredients: [],
-    food_ingredients: []
+    food_ingredients: [],
+    planned_food: [],
+    shoppingList: []
   });
 
   const loadData = async () => {
-    const [foodsSnap, ingredientsSnap, relationsSnap] = await Promise.all([
+    const [foodsSnap, ingredientsSnap, relationsSnap, planned_foodSnap, shopping_listSnap] = await Promise.all([
       getDocs(collection(db, "foods")),
       getDocs(collection(db, "ingredients")),
-      getDocs(collection(db, "food_ingredients"))
+      getDocs(collection(db, "food_ingredients")),
+      getDocs(collection(db, "planned_food")),
+      getDocs(collection(db, "shopping_list")),
     ]);
 
     const foods = foodsSnap.docs.map(doc => doc.data());
     const ingredients = ingredientsSnap.docs.map(doc => doc.data());
-    const food_ingredient = relationsSnap.docs.map(doc => doc.data());
+    const food_ingredients = relationsSnap.docs.map(doc => doc.data());
+    const planned_food = planned_foodSnap.docs.map(doc => doc.data());
+    const shopping_list = shopping_listSnap.docs.map(doc => doc.data());
 
-    return {foods, ingredients, food_ingredient};
+    return {foods, ingredients, food_ingredients, planned_food, shopping_list};
   };
   
   useEffect(() => {
@@ -59,28 +65,29 @@ function AppLayout({ isGuestMode }) {
       const food_ingredients = [
           {id: 1, food_id: 1, ingredient_id: 1, amount: 1000},
           {id: 2, food_id: 1, ingredient_id: 2, amount: 2},
-          {id: 3, food_id: 2, ingredient_id: 7, amount: 2},
           {id: 3, food_id: 2, ingredient_id: 8, amount: 4},
           {id: 4, food_id: 3, ingredient_id: 2, amount: 2},
           {id: 5, food_id: 3, ingredient_id: 4, amount: 500},
-          {id: 6, food_id: 3, ingredient_id: 5, amount: 2},
           {id: 6, food_id: 3, ingredient_id: 3, amount: 1000},
           {id: 7, food_id: 4, ingredient_id: 2, amount: 2},
           {id: 8, food_id: 4, ingredient_id: 4, amount: 400},
           {id: 9, food_id: 4, ingredient_id: 5, amount: 2},
           {id: 10, food_id: 4, ingredient_id: 6, amount: 140},
       ] ; 
-
-      const plannedFood = [
-        {id: 1, recipe_id: 3},
-        {id: 2, recipe_id: 4}
+      const planned_food = [
+        {id: 1, recipe_id: 3, portions: 4},
+        {id: 2, recipe_id: 4, portions: 2}
+      ]
+      const shopping_list = [
+        {id: 2, amount: 3}
       ]
 
       setData({
         foods: foods,
         ingredients: ingredients,
         food_ingredients: food_ingredients,
-        plannedFood: plannedFood
+        planned_food: planned_food,
+        shopping_list: shopping_list
       });
     }
 
@@ -96,7 +103,7 @@ function AppLayout({ isGuestMode }) {
   return (
     <div>
       <Routes>
-        <Route path = "/" element = {<HomePage key={homeKey} data={data} />}/>
+        <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}/>
         <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
         <Route path = "/shoppingList" element = {<ShoppingListPage/>}/>
         <Route path = "/plannedFood" element = {<PlannedFoodPage/>}/>
