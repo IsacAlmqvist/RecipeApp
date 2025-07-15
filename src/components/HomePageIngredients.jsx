@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { db } from "../firebase";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc } from "firebase/firestore";
 
 export default function HomePageIngredients({listItems, onIngredientClicked, data, setData, isGuestMode}) {
 
@@ -8,7 +8,7 @@ export default function HomePageIngredients({listItems, onIngredientClicked, dat
 
     const updateIngredientAmount = (id, newAmount) => {
 
-        const exists = prev.shopping_list.some(item => item.id === id)
+        const exists = data.shopping_list.some(item => item.id === id)
 
         if(exists) { // update amount of that ingredient in shopping list
             setData( prev => ({
@@ -24,7 +24,7 @@ export default function HomePageIngredients({listItems, onIngredientClicked, dat
             }));
         }
 
-        if(timers[id]) clearTimeout(ingredientTimers[id]);
+        if(timers[id]) clearTimeout(timers[id]);
 
         const timerId = setTimeout(() => {
             if(!isGuestMode){
@@ -34,10 +34,10 @@ export default function HomePageIngredients({listItems, onIngredientClicked, dat
                     } else {
                         setDoc(doc(db, "shopping_list", id.toString()), 
                             {id, amount: newAmount},
-                            {merge: True});
+                            {merge: true});
                     }
                 } catch (error) {
-                    console.error("could not access database to update shopping list");
+                    console.error("could not access database to update shopping list: ", error);
                 }
             }
         }, 2000);
@@ -56,19 +56,20 @@ export default function HomePageIngredients({listItems, onIngredientClicked, dat
                     >
                         <div className="me-3" style ={{textAlign: 'left'}}>{item.name}</div>
 
-                        <form>
-                            <div>
-                                <input
-                                    name="amount"
-                                    type="number"
-                                    className="form-control"
-                                    value={data.shopping_list.find(i => i.id === item.id)?.amount || ''}
-                                    onClick={(e) => e.stopPropagation()}
-                                    onChange={(e) => updateIngredientAmount(item.id, Number(e.target.value))}
-                                    style={{width: '80px', textAlign: 'center', padding: '4px 0'}}
-                                />
-                            </div>
+                        <form className="me-2 ms-auto">
+                            <input
+                                name="amount"
+                                type="number"
+                                className="form-control"
+                                value={data.shopping_list.find(i => i.id === item.id)?.amount || ''}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => updateIngredientAmount(item.id, Number(e.target.value))}
+                                style={{width: '60px', textAlign: 'center', padding: '4px 0'}}
+                            />
                         </form>
+
+                        <div className="me-2">{item.unit}</div>
+
                     </li>
                 ))}
             </ul>

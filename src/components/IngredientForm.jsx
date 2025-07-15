@@ -5,6 +5,7 @@ export default function IngredientForm({onAddData, includeAmount = false, initia
     const [form, setForm] = useState({
         name: initialName || '',
         unit: 'g',
+        category: 'kolonial',
         cals: '',
         amount: ''
     })
@@ -63,6 +64,26 @@ export default function IngredientForm({onAddData, includeAmount = false, initia
                     <option value="dl">dl</option>
                     <option value="msk">msk</option>
                     <option value="tsk">tsk</option>
+                </select>
+            </div>
+            <div className="mb-4">
+                <label htmlFor="category" className="form-label">
+                    Avdelning
+                </label>
+                <select 
+                    id="category"
+                    name="category"
+                    className="form-select" 
+                    value={form.category} 
+                    onChange={handleChange}
+                >
+                    <option value="kolonial">Kolonial</option>
+                    <option value="frukt och grönt">Frukt och grönt</option>
+                    <option value="kött och chark">Kött och chark</option>
+                    <option value="mejeri">Mejeri</option>
+                    <option value="bröd">Bröd</option>
+                    <option value="frys">Frys</option>
+                    <option value="övrigt">Övrigt</option>
                 </select>
             </div>
             <div className="mb-4">

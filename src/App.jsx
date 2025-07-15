@@ -22,7 +22,7 @@ function AppLayout({ isGuestMode }) {
     ingredients: [],
     food_ingredients: [],
     planned_food: [],
-    shoppingList: []
+    shopping_list: []
   });
 
   const loadData = async () => {
@@ -105,8 +105,8 @@ function AppLayout({ isGuestMode }) {
       <Routes>
         <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}/>
         <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
-        <Route path = "/shoppingList" element = {<ShoppingListPage/>}/>
-        <Route path = "/plannedFood" element = {<PlannedFoodPage/>}/>
+        <Route path = "/shoppingList" element = {<ShoppingListPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
+        <Route path = "/plannedFood" element = {<PlannedFoodPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
       </Routes>
 
       <BottomNav onHomeClick={refreshHome} />

@@ -10,10 +10,12 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
     }
 
     const deletePlannedFoodDb = async (id) => {
-        try {
-            await deleteDoc(doc(db, "planned_food", id.toString()));
-        } catch (error) {
-            console.error("error deleting planned food");
+        if(!isGuestMode) {
+            try {
+                await deleteDoc(doc(db, "planned_food", id.toString()));
+            } catch (error) {
+                console.error("error deleting planned food");
+            }
         }
     }
 
@@ -24,9 +26,60 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
         }
     };
 
+    const overWriteShoppingListDb = async (items) => {
+        if(!isGuestMode) {
+            try {
+                const promises = items.map(item => 
+                    item.amount === 0
+                        ? deleteDoc(doc(db, "shopping_list", item.id.toString()))
+                        : setDoc(doc(db, "shopping_list", item.id.toString()), item, { merge: true })
+                );
+                await Promise.all(promises);
+            } catch (error) {
+                console.error("could not update shopping list: " + error);
+            }
+        }
+    }
+
+    const createShoppingList = (recipeId, portionsAdded) => {
+
+        const ingredients = data.food_ingredients.filter(item => item.food_id === recipeId);
+
+        const shoppingListCopy = [...data.shopping_list];
+
+        const changedItems = [];
+
+        const thisRecipe = data.foods.find(item => item.id === recipeId);
+
+        for (const ing of ingredients) {
+            const amountToAdd = (ing.amount / thisRecipe.portions) * portionsAdded;
+
+            const foundItem = shoppingListCopy.find(item => item.id === ing.ingredient_id);
+
+            if(foundItem) {
+                const newAmount = foundItem.amount + amountToAdd;
+                if(amountToAdd !== 0) {
+                    foundItem.amount = newAmount < 0.01 ? 0 : newAmount;
+                    changedItems.push({...foundItem});
+                }
+            } else {
+                const newItem = {id: ing.ingredient_id, amount: Math.max(0, amountToAdd)}
+                shoppingListCopy.push(newItem);
+                changedItems.push(newItem);
+            }
+        }
+
+        setData(prev => ({
+            ...prev,
+            shopping_list: shoppingListCopy
+        }));
+
+        overWriteShoppingListDb(changedItems);
+    }
+
     const addPlannedFood = (id) => {
-        const chosenRecipe = data.foods.find(i => i.id = id);
-        const newPlanned = {id: Math.max(...data.planned_food.map(item => item.id), 0)  + 1, recipe_id: id, portions: chosenRecipe.portions};
+        const chosenRecipe = data.foods.find(i => i.id === id);
+        const newPlanned = {id: id, portions: chosenRecipe.portions};
 
         setData( prev => ({
             ...prev,
@@ -34,7 +87,9 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
             })
         );
         addPlannedFoodDb(newPlanned);
-    } 
+
+        createShoppingList(id, chosenRecipe.portions);
+    }
 
     const adjustPortions = (id, increment) => {
         const newPortions = data.planned_food.find(i => i.id === id).portions + increment;
@@ -57,6 +112,8 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
 
             adjustPortionsDb(id, newPortions);
         }
+
+        createShoppingList(id, increment);
     } 
 
     return (
@@ -71,7 +128,7 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
                     <div className="me-3" style ={{textAlign: 'left'}}>{item.name}</div>
                         {data.planned_food.find(i => i.id === item.id) ? 
                             (
-                                <form>
+                                <form className="ms-auto">
                                     <div style={{display: 'flex'}}>
                                         <button type="button" className="btn btn-sm btn-outline-secondary" 
                                             onClick={(e) => {

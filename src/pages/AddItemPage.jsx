@@ -34,12 +34,10 @@ export default function AddItemPage({data, setData, isGuestMode}) {
     // currently, nothing happens if name exists
     const addToIngredients = (itemToAdd) => {
 
-        console.log("Relations: " + data.food_ingredients);
-
         const newCals = parseFloat(itemToAdd.cals) || 0;
         const newId = Math.max(...data.ingredients.map(item => item.id), 0) + 1;
         const newName = itemToAdd.name.charAt(0).toUpperCase() + itemToAdd.name.slice(1);
-        const newItem = {id: newId, unit: itemToAdd.unit, name: newName, cals: newCals};
+        const newItem = {id: newId, unit: itemToAdd.unit, category: itemToAdd.category, name: newName, cals: newCals};
 
         if(data.ingredients.find(i => i.name === itemToAdd.name)){
             console.log(newItem.name +" finns redan");
@@ -58,9 +56,7 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             );
 
         }
-        console.log("new ingredient: " + newItem);
-        // console.log(data.ingredients);
-        // console.log(data.food_ingredients);
+
         return newId;
 
     }

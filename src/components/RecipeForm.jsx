@@ -6,7 +6,7 @@ import SearchedIngredientList from "./SearchedIngredientList";
 
 export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
-    const [selectedIngredient, setSelectedIngredient] = useState(-1); // unused most likely
+    const [selectedIngredient, setSelectedIngredient] = useState(-1);
 
     const [form, setForm] = useState({
         name: '',
@@ -151,9 +151,8 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
             {searchInput !== '' && 
                 <>
-                    <SearchedIngredientList listItems = {listItems} selectedIndex={selectedIngredient}
-                        onSelectItem = {handleIngredientClicked}
-                    />
+                    <SearchedIngredientList listItems = {listItems} onSelectItem = {handleIngredientClicked} />
+
                     <button type="button" className="btn btn-primary mb-3" onClick={onAddNewClicked}>
                         ➕ Lägg till ny
                     </button>
