@@ -85,7 +85,8 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
         onAddRecipe(form);
 
-        setForm({name: '', ingredients: [], description: '', portions: 4})
+        setForm({name: '', ingredients: [], description: '', portions: 4});
+        setSelectedIngredient(-1);
     }
 
     const onAddNewClicked = () => {

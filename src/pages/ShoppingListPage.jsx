@@ -39,7 +39,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
         } 
 
         // add to shopping list or adjust amount in shopping list
-        updateIngredientAmount(indexToUpdate, ingredientAmount);
+        updateIngredientAmount(indexToUpdate, Number(ingredientAmount));
 
         setIngredientAmount('');
         setSelectedUnit('g');
@@ -75,18 +75,19 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
     const updateIngredientAmount = (id, newAmount) => {
 
         const exists = data.shopping_list.find(item => item.id === id);
+        const finalAmount = exists ? exists.amount + newAmount : newAmount;
 
         if(exists) { // update amount of that ingredient in shopping list
-            setData( prev => ({
+            setData( prev => ({ 
                 ...prev,
                 shopping_list: prev.shopping_list.map(item =>
-                    item.id === id ? {...item, amount: exists.amount + newAmount} : item
+                    item.id === id ? {...item, amount: finalAmount} : item
                 )
             }));
         } else { // add new ingredient to shopping list
             setData( prev => ({
                 ...prev,
-                shopping_list: [...prev.shopping_list, {id: id, amount: newAmount}]
+                shopping_list: [...prev.shopping_list, {id: id, amount: finalAmount}]
             }));
         }
 
@@ -95,11 +96,11 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
         const timerId = setTimeout(() => {
             if(!isGuestMode){
                 try {
-                    if(newAmount === 0) {
+                    if(finalAmount === 0) {
                         deleteDoc(doc(db, "shopping_list", id.toString()))
                     } else {
                         setDoc(doc(db, "shopping_list", id.toString()), 
-                            {id, amount: newAmount},
+                            {id, amount: finalAmount},
                             {merge: true});
                     }
                 } catch (error) {
