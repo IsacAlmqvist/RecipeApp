@@ -1,7 +1,7 @@
 {
   "short_name": "RecipeApp",
   "name": "Recept",
-  "start_url": "/RecipeApp/",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
