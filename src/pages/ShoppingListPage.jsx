@@ -9,6 +9,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
 
     const [selectedIngredient, setSelectedIngredient] = useState(-1);
     const [ingredientAmount, setIngredientAmount] = useState('');
+    const [amountFieldFocused, setAmountFieldFocused] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState('g');
     const [selectedCetegory, setSelectedCategory] = useState('kolonial');
     const [selectedCals, setSelectedCals] = useState('');
@@ -164,7 +165,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                     type="text"
                     className="form-control"
                     value={searchInput}
-                    onChange={e => setSearchInput(e.target.value)}
+                    onChange={e => {setSearchInput(e.target.value); setSelectedIngredient(-1)}}
                     placeholder= {selectedIngredient === -1 ? "Lägg till" : data.ingredients.find(i => i.id === selectedIngredient).name}
                 />
                 <div className="input-group" style ={{maxWidth: "90px"}}>
@@ -175,22 +176,20 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                         value={ingredientAmount}
                         onChange={(e) => setIngredientAmount(e.target.value)}
                         placeholder="Mängd"
+                        onFocus={() => setAmountFieldFocused(true)}
+                        onBlur={() => setAmountFieldFocused(false)}
                     />
-                    {selectedIngredient !== -1 && (
+                    {selectedIngredient !== -1 && searchInput === '' ? (
                         <span className="input-group-text">
                             {data.ingredients.find(i => i.id === selectedIngredient)?.unit || ""}
                         </span>
-                    )}
-                    {selectedIngredient === -1 && ingredientAmount !== 0 && (
-                        <div className="mb-4">
-                            <label htmlFor="unit" className="form-label">
-                                Enhet
-                            </label>
-                            <select 
+                    ) : ( (ingredientAmount !== '' || amountFieldFocused) &&
+                        <div className="input-group-text">
+                            <select
                                 id="unit"
                                 name="unit"
-                                className="form-select" 
-                                value={selectedUnit} 
+                                className="form-select"
+                                value={selectedUnit}
                                 onChange={(e) => setSelectedUnit(e.target.value)}
                             >
                                 <option value="g">g</option>
@@ -202,43 +201,48 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                             </select>
                         </div>
                     )}
-                    </div>
-                    <div className="mb-4">
-                    <label htmlFor="category" className="form-label">
-                        Avdelning
-                    </label>
-                    <select 
-                        id="category"
-                        name="category"
-                        className="form-select" 
-                        value={selectedCetegory} 
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                    >
-                        <option value="kolonial">Kolonial</option>
-                        <option value="frukt och grönt">Frukt och grönt</option>
-                        <option value="kött och chark">Kött och chark</option>
-                        <option value="mejeri">Mejeri</option>
-                        <option value="bröd">Bröd</option>
-                        <option value="frys">Frys</option>
-                        <option value="övrigt">Övrigt</option>
-                    </select>
+                        <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
+                    </form>
+                    
+                    { selectedIngredient === -1 && ( ingredientAmount !== '' || amountFieldFocused ) && (
+                        <>
+                            <div className="mb-4">
+                                <label htmlFor="category" className="form-label">
+                                    Avdelning
+                                </label>
+                                <select
+                                    id="category"
+                                    name="category"
+                                    className="form-select"
+                                    value={selectedCetegory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                >
+                                    <option value="kolonial">Kolonial</option>
+                                    <option value="frukt och grönt">Frukt och grönt</option>
+                                    <option value="kött och chark">Kött och chark</option>
+                                    <option value="mejeri">Mejeri</option>
+                                    <option value="bröd">Bröd</option>
+                                    <option value="frys">Frys</option>
+                                    <option value="övrigt">Övrigt</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="cals" className="form-label">
+                                    Cals
+                                </label>
+                                <input
+                                    id="cals"
+                                    name="cals"
+                                    type="number"
+                                    className="form-control"
+                                    value={selectedCals}
+                                    onChange={(e) => selectedCals(e.target.value)}
+                                    placeholder="t.ex. 280"
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
-                <div className="mb-4">
-                    <label htmlFor="cals" className="form-label">
-                        Cals
-                    </label>
-                    <input
-                        id="cals"
-                        name="cals"
-                        type="number"
-                        className="form-control"
-                        value={selectedCals}
-                        onChange={(e) => selectedCals(e.target.value)}
-                        placeholder="t.ex. 280"
-                    />
-                </div>
-                <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
-            </form>
 
             {searchInput !== '' && 
                 <>
