@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import FoodList from '../components/FoodList';
 import Toggle from '../components/Toggle';
 import RecipePage from '../components/RecipePage';
+import IngredientPage from '../components/IngredientPage';
 import SearchBar from '../components/SearchBar';
+import HomePageIngredients from '../components/HomePageIngredients';
+import HomePageRecipes from '../components/HomePageRecipes';
 
-export default function HomePage({data}) {
-
+export default function HomePage({data, setData, isGuestMode}) {
+    
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [toggleIndex, setToggleIndex] = useState(0);
     const [showRecipe, setShowRecipe] = useState(false);
@@ -34,7 +36,10 @@ export default function HomePage({data}) {
         <>
             {
                 showRecipe ? 
-                    <RecipePage data = {data} itemId = {selectedIndex} />
+                    toggleIndex === 0 ? 
+                        <RecipePage data = {data} itemId = {selectedIndex} />
+                    :
+                        <IngredientPage data = {data} itemId = {selectedIndex}/>
                 :
                 <>
                     <Toggle toggleIndex={toggleIndex} onToggleClick={onToggleClick} />
@@ -42,7 +47,11 @@ export default function HomePage({data}) {
                         <SearchBar input={searchInput} setInput={setSearchInput} />
                     </div>
                     <div style={{width: '90%', margin: '0 auto'}}>
-                        <FoodList listItems = {listItems} selectedIndex={selectedIndex} onSelectItem = {handleListItemClicked} />
+                        { toggleIndex == 0 ? 
+                            <HomePageRecipes listItems = {listItems} onRecipeClicked = {handleListItemClicked} 
+                                data = {data} setData = {setData} isGuestMode = {isGuestMode}/>
+                            : <HomePageIngredients listItems = {listItems} onIngredientClicked = {handleListItemClicked} 
+                                data = {data} setData = {setData} isGuestMode = {isGuestMode}/>}
                     </div>
                 </>
             }

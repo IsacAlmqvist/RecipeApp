@@ -17,8 +17,6 @@ export default function RecipePage({data, itemId}) {
     return (
         <>
 
-            {console.log(ingreientList)}
-
             <h1>
             {recipe.name}
             </h1>

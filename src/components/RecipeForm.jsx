@@ -1,13 +1,12 @@
 import { useState } from "react";
-import SearchBar from "../components/SearchBar";
-import FoodList from "./FoodList";
 import IngredientList from "./IngredientList";
 import IngredientForm from "./IngredientForm";
 import Modal from "./Modal";
+import SearchedIngredientList from "./SearchedIngredientList";
 
 export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
-    const [selectedIngredient, setSelectedIngredient] = useState(-1); // unused most likely
+    const [selectedIngredient, setSelectedIngredient] = useState(-1);
 
     const [form, setForm] = useState({
         name: '',
@@ -83,11 +82,11 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
             console.log("saknas namn");
             return;
         }
-        console.log(form);
 
         onAddRecipe(form);
 
-        setForm({name: '', ingredients: [], description: '', portions: 4})
+        setForm({name: '', ingredients: [], description: '', portions: 4});
+        setSelectedIngredient(-1);
     }
 
     const onAddNewClicked = () => {
@@ -153,9 +152,8 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
             {searchInput !== '' && 
                 <>
-                    <FoodList listItems = {listItems} selectedIndex={selectedIngredient}
-                        onSelectItem = {handleIngredientClicked}
-                    />
+                    <SearchedIngredientList listItems = {listItems} onSelectItem = {handleIngredientClicked} />
+
                     <button type="button" className="btn btn-primary mb-3" onClick={onAddNewClicked}>
                         ➕ Lägg till ny
                     </button>

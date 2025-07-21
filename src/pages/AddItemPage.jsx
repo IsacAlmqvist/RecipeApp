@@ -9,15 +9,19 @@ import { setDoc, doc } from "firebase/firestore";
 export default function AddItemPage({data, setData, isGuestMode}) {
 
     const addFoodDB = async (food) => {
-        if(isGuestMode) await setDoc(doc(db, "foods", food.id.toString()), food);
+        if(!isGuestMode) await setDoc(doc(db, "foods", food.id.toString()), food);
     };
 
     const addIngredientDB = async (ingredient) => {
-        if(isGuestMode) await setDoc(doc(db, "ingredients", ingredient.id.toString()), ingredient);
+        if(!isGuestMode) await setDoc(doc(db, "ingredients", ingredient.id.toString()), ingredient);
     };
 
-    const addFoodIngredientDB = async (relation) => {
-        if(isGuestMode) await setDoc(doc(db, "food_ingredients", relation.id.toString()), relation);
+    const addFoodIngredientDB = async (relations) => {
+        if(!isGuestMode) {
+            await Promise.all(relations.map((item) => (
+                setDoc(doc(db, "food_ingredients", item.id.toString()), item)
+            )))
+        }
     };
 
     const [toggleIndex, setToggleIndex] = useState(0);
@@ -32,7 +36,8 @@ export default function AddItemPage({data, setData, isGuestMode}) {
 
         const newCals = parseFloat(itemToAdd.cals) || 0;
         const newId = Math.max(...data.ingredients.map(item => item.id), 0) + 1;
-        const newItem = {id: newId, unit: itemToAdd.unit, name: itemToAdd.name, cals: newCals};
+        const newName = itemToAdd.name.charAt(0).toUpperCase() + itemToAdd.name.slice(1);
+        const newItem = {id: newId, unit: itemToAdd.unit, category: itemToAdd.category, name: newName, cals: newCals};
 
         if(data.ingredients.find(i => i.name === itemToAdd.name)){
             console.log(newItem.name +" finns redan");
@@ -51,17 +56,16 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             );
 
         }
-        console.log("new ingredient: " + newItem);
-        // console.log(data.ingredients);
-        // console.log(data.food_ingredients);
+
         return newId;
 
     }
 
     const addToRecipes = (itemToAdd) => {
 
-        const newId = Math.max(...data.foods.map(item => item.id), 0) + 1;
-        const newRecipe = {id: newId, name: itemToAdd.name, 
+        const newId = Math.max(...data.foods.map(item => item.id || 0), 0) + 1;
+        const newName = itemToAdd.name.charAt(0).toUpperCase() + itemToAdd.name.slice(1);
+        const newRecipe = {id: newId, name: newName, 
                 description: itemToAdd.description, portions: itemToAdd.portions};
 
         if(data.foods.find(i => i.name === itemToAdd.name)){
@@ -69,8 +73,8 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             return;
         }
 
-        const newIngredients = itemToAdd.ingredients.map(ingredient =>({
-            id: Math.max(...data.food_ingredients.map(item => item.id), 0) + 1,
+        const newIngredients = itemToAdd.ingredients.map((ingredient, index) =>({
+            id: Math.max(...data.food_ingredients.map(item => item.id || 0), 0) + 1 + index,
             food_id: newId,
             ingredient_id: ingredient.id,
             amount: ingredient.amount
@@ -91,8 +95,6 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             console.log("could not add recipe-relation to database", err)
         );
 
-        console.log("new recipe: " + newRecipe);
-        console.log("new ingredients " + newIngredients);
     }
 
     return (

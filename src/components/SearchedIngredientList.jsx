@@ -1,4 +1,4 @@
-export default function FoodList({listItems, selectedIndex, onSelectItem}) {
+export default function SearchedIngredientList({listItems, onSelectItem}) {
 
     return (
         <div style={{margin: '0 auto'}} className="mt-4">
@@ -6,7 +6,7 @@ export default function FoodList({listItems, selectedIndex, onSelectItem}) {
                 {listItems.map((item) => (
                     <li
                         key={item.id}
-                        className={selectedIndex === item.id ? "list-group-item active" : "list-group-item"}
+                        className="list-group-item"
                         onClick={() => {onSelectItem(item.id);}}
                     >
                         <div className="me-3" style ={{textAlign: 'left'}}>{item.name}</div>
