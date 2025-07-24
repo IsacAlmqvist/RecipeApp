@@ -24,9 +24,14 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
             .includes(searchInput.toLowerCase()))
     }
 
+    const checkSearch = () => {
+        return data.ingredients.some(i => i.name.toLowerCase() === searchInput.toLowerCase());
+    }
+
     const handleIngredientClicked = (itemId) => {
         setSelectedIngredient(itemId);
         setSearchInput('');
+        setAmountFieldFocused(false);
     }
 
     const handleAddIngredientFinal = () => {
@@ -46,6 +51,9 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
         setSelectedUnit('g');
         setSelectedCategory('kolonial');
         setSelectedIngredient(-1);
+        setSearchInput('');
+        setSelectedCals('');
+        setAmountFieldFocused(false);
     }
 
     const addToIngredients = (itemToAdd) => {
@@ -165,10 +173,11 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                     type="text"
                     className="form-control"
                     value={searchInput}
-                    onChange={e => {setSearchInput(e.target.value); setSelectedIngredient(-1)}}
+                    onChange={e => {setSearchInput(e.target.value); setSelectedIngredient(-1); setAmountFieldFocused(false)}}
                     placeholder= {selectedIngredient === -1 ? "Lägg till" : data.ingredients.find(i => i.id === selectedIngredient).name}
+                    onFocus = {() => setAmountFieldFocused(false)}
                 />
-                <div className="input-group" style ={{maxWidth: "90px"}}>
+                <div className="input-group" style ={{maxWidth: "160px"}}>
                     <input
                         name="ingredientAmount"
                         className="form-control"
@@ -177,18 +186,18 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                         onChange={(e) => setIngredientAmount(e.target.value)}
                         placeholder="Mängd"
                         onFocus={() => setAmountFieldFocused(true)}
-                        onBlur={() => setAmountFieldFocused(false)}
                     />
-                    {selectedIngredient !== -1 && searchInput === '' ? (
+                    {(selectedIngredient !== -1 && searchInput === '') ? (
                         <span className="input-group-text">
                             {data.ingredients.find(i => i.id === selectedIngredient)?.unit || ""}
                         </span>
                     ) : ( (ingredientAmount !== '' || amountFieldFocused) &&
-                        <div className="input-group-text">
+                        <>
                             <select
                                 id="unit"
                                 name="unit"
-                                className="form-select"
+                                className="form-select input-group-text"
+                                style={{maxWidth: '50px', textAlign: 'left'}}
                                 value={selectedUnit}
                                 onChange={(e) => setSelectedUnit(e.target.value)}
                             >
@@ -199,55 +208,44 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                                 <option value="msk">msk</option>
                                 <option value="tsk">tsk</option>
                             </select>
-                        </div>
-                    )}
-                        <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
-                    </form>
-                    
-                    { selectedIngredient === -1 && ( ingredientAmount !== '' || amountFieldFocused ) && (
-                        <>
-                            <div className="mb-4">
-                                <label htmlFor="category" className="form-label">
-                                    Avdelning
-                                </label>
-                                <select
-                                    id="category"
-                                    name="category"
-                                    className="form-select"
-                                    value={selectedCetegory}
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                >
-                                    <option value="kolonial">Kolonial</option>
-                                    <option value="frukt och grönt">Frukt och grönt</option>
-                                    <option value="kött och chark">Kött och chark</option>
-                                    <option value="mejeri">Mejeri</option>
-                                    <option value="bröd">Bröd</option>
-                                    <option value="frys">Frys</option>
-                                    <option value="övrigt">Övrigt</option>
-                                </select>
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="cals" className="form-label">
-                                    Cals
-                                </label>
-                                <input
-                                    id="cals"
-                                    name="cals"
-                                    type="number"
-                                    className="form-control"
-                                    value={selectedCals}
-                                    onChange={(e) => selectedCals(e.target.value)}
-                                    placeholder="t.ex. 280"
-                                />
-                            </div>
                         </>
                     )}
+                    <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
                 </div>
-
+            </form>
+                    
+                { selectedIngredient === -1 && ( ingredientAmount !== '' || amountFieldFocused ) && (
+                    <div style={{maxWidth: '160px', marginLeft: 'auto'}}>
+                        <select
+                            id="category"
+                            name="category"
+                            className="form-select"
+                            value={selectedCetegory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                        >
+                            <option value="kolonial">Kolonial</option>
+                            <option value="frukt och grönt">Frukt och grönt</option>
+                            <option value="kött och chark">Kött och chark</option>
+                            <option value="mejeri">Mejeri</option>
+                            <option value="bröd">Bröd</option>
+                            <option value="frys">Frys</option>
+                            <option value="övrigt">Övrigt</option>
+                        </select>
+                        <input
+                            id="cals"
+                            name="cals"
+                            type="number"
+                            className="form-control"
+                            value={selectedCals}
+                            onChange={(e) => setSelectedCals(e.target.value)}
+                            placeholder="Kalorier/100g"
+                        />
+                    </div>
+                )}
             {searchInput !== '' && 
-                <>
+                <div className="mb-4 mx-auto" style={{maxWidth: '86%'}}>
                     <SearchedIngredientList listItems = {searchItems} onSelectItem = {handleIngredientClicked} />
-                </>
+                </div>
             }
 
             <IngredientList listItems={shoppingList} />
