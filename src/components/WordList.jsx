@@ -1,4 +1,4 @@
-export default function IngredientList({listItems = []}) {
+export default function WordList({listItems = []}) {
 
     return (
         <div className="mb-1">
@@ -8,9 +8,7 @@ export default function IngredientList({listItems = []}) {
                         key={index}
                         className="list-group-item d-flex"
                     >
-                        <div className="me-3" style ={{textAlign: 'left'}}>{item.name}</div>
-                        <div className= "ms-auto me-2" style ={{textAlign: 'right'}}>{item.amount}</div>
-                        <div className= "me-3" style ={{textAlign: 'right'}}>{item.unit}</div>
+                        <div className="me-3" style ={{textAlign: 'left'}}>{item}</div>
                     </li>
                 ))}
             </ul>

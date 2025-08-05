@@ -1,10 +1,10 @@
 import { useState } from "react";
-import Toggle from "../components/Toggle";
-import IngredientForm from "../components/IngredientForm";
-import RecipeForm from "../components/RecipeForm";
 
 import { db } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
+
+import { Link, Outlet } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function AddItemPage({data, setData, isGuestMode}) {
 
@@ -20,6 +20,22 @@ export default function AddItemPage({data, setData, isGuestMode}) {
         if(!isGuestMode) {
             await Promise.all(relations.map((item) => (
                 setDoc(doc(db, "food_ingredients", item.id.toString()), item)
+            )))
+        }
+    };
+
+    const addKeywordsDB = async (newKeywords) => {
+        if(!isGuestMode) {
+            await Promise.all(newKeywords.map((item) => (
+                setDoc(doc(db, "keywords", item.id.toString()), item)
+            )))
+        }
+    };
+
+    const addKeywordRelationsDB = async (relations) => {
+        if(!isGuestMode) {
+            await Promise.all(relations.map((item) => (
+                setDoc(doc(db, "recipe_keywords", item.id.toString()), item)
             )))
         }
     };
@@ -80,11 +96,34 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             amount: ingredient.amount
         }));
 
+        const newKeywords = [];
+        const newKeywordRelations = [];
+
+        itemToAdd.keywords.forEach((word, index) => {
+            const existingKeyword = data.keywords.find(k => k.keyword.toLowerCase() === word);
+
+            let keywordId;
+            if(existingKeyword) {
+                keywordId = existingKeyword.id;
+            } else {
+                keywordId = Math.max(...data.keywords.map(k => k.id || 0), 0) + 1 + newKeywords.length;
+                newKeywords.push({id: keywordId, keyword: word});
+            }
+
+            newKeywordRelations.push({
+                id: Math.max(...data.recipe_keywords.map(rk => rk.id ||0), 0) + 1 + index,
+                recipe_id: newId,
+                keyword_id: keywordId 
+            })
+        })
+
         // add to code DB
         setData( prev => ({
             ...prev,
             foods: [...prev.foods, newRecipe],
-            food_ingredients: [...prev.food_ingredients, ...newIngredients]
+            food_ingredients: [...prev.food_ingredients, ...newIngredients],
+            recipe_keywords: [...prev.recipe_keywords, ... newKeywordRelations],
+            keywords: [...prev.keywords, ...newKeywords]
         }));
 
         // add to real DB
@@ -92,21 +131,50 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             console.log("could not add recipe to database", err)
         );
         addFoodIngredientDB(newIngredients).catch((err) => 
-            console.log("could not add recipe-relation to database", err)
+            console.log("could not add recipe-relations to database", err)
         );
-
+        addKeywordsDB(newKeywords).catch((err) => 
+            console.log("could not add keywords to database", err)
+        );
+        addKeywordRelationsDB(newKeywordRelations).catch((err) => 
+            console.log("could not add keyword-relations to database", err)
+        );
     }
+
+    const location = useLocation();
 
     return (
         <>
-            <Toggle toggleIndex={toggleIndex} onToggleClick={onToggleClick} />
-            { toggleIndex === 0 ?
-                <RecipeForm data={data} onAddRecipe={addToRecipes} onAddIngredient={addToIngredients}/>
-                    :
-                <div className="mt-4">
-                <IngredientForm onAddData={addToIngredients} />
-                </div>
-            }   
+            <div className="text-center mt-3">
+                <ul className="list-group list-group-horizontal d-inline-flex">
+                    <li className={
+                        location.pathname.endsWith("/recipe")
+                        ? "list-group-item active"
+                        : "list-group-item"
+                    }>
+                        <Link
+                        to="recipe"
+                        className="text-decoration-none text-reset"
+                        >
+                        Recept
+                        </Link>
+                    </li>
+                    <li className={
+                        location.pathname.endsWith("/ingredient")
+                        ? "list-group-item active"
+                        : "list-group-item"
+                    }>
+                        <Link
+                        to="ingredient"
+                        className="text-decoration-none text-reset"
+                        >
+                        Ingrediens
+                        </Link>
+                    </li>
+                </ul>
+            </div>
+
+            <Outlet context={{data, addToRecipes, addToIngredients}}/>
         </>
     );
 }

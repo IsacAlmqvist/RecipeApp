@@ -5,6 +5,8 @@ import { setDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
 
 export default function HomePageRecipes({listItems, onRecipeClicked, data, setData, isGuestMode}) {
 
+    const [pendingPlanned, setPendingPlanned] = useState({});
+
     const addPlannedFoodDb = async (newPlanned) => {
         if(!isGuestMode) await setDoc(doc(db, "planned_food", newPlanned.id.toString()), newPlanned)
     }
@@ -69,52 +71,90 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
             }
         }
 
+        const cleanedShoppingList = shoppingListCopy.filter(item => item.amount > 0.01);
+
         setData(prev => ({
             ...prev,
-            shopping_list: shoppingListCopy
+            shopping_list: cleanedShoppingList
         }));
 
         overWriteShoppingListDb(changedItems);
     }
 
     const addPlannedFood = (id) => {
-        const chosenRecipe = data.foods.find(i => i.id === id);
-        const newPlanned = {id: id, portions: chosenRecipe.portions};
 
-        setData( prev => ({
-            ...prev,
-            planned_food: [...prev.planned_food, newPlanned]
-            })
-        );
-        addPlannedFoodDb(newPlanned);
+        if (pendingPlanned[id] === undefined) {
+            console.log("the recipe was not in the pending list yet :(");
+            return;
+        }
 
-        createShoppingList(id, chosenRecipe.portions);
-    }
+        const newPlanned = {id: id, portions: pendingPlanned[id]};
+        const alreadyPlanned = data.planned_food.find(i => i.id === id);
+        const portionDiff = newPlanned.portions - (alreadyPlanned?.portions || 0);
 
-    const adjustPortions = (id, increment) => {
-        const newPortions = data.planned_food.find(i => i.id === id).portions + increment;
-
-        if(newPortions === 0) {
+        if(pendingPlanned[id] === 0) {
+            if(!alreadyPlanned) {
+                setPendingPlanned(prev => {
+                    const copy = {...prev}
+                    delete copy[id]
+                    return copy
+                });
+                return;
+            }
             deletePlannedFoodDb(id);
             setData( prev => ({
                 ...prev,
                 planned_food: prev.planned_food.filter(item => item.id !== id)
             }));
-        } 
 
-        else {
+        } 
+        else if(alreadyPlanned) {
             setData(prev => ({
                 ...prev,
                 planned_food: prev.planned_food.map(item => 
-                    item.id === id ? {...item, portions: newPortions} : item
+                    item.id === id ? {...item, portions: newPlanned.portions} : item
                 )
             }));
-
-            adjustPortionsDb(id, newPortions);
+            adjustPortionsDb(id, newPlanned.portions);
+        }
+        else {
+            setData(prev => ({
+                ...prev,
+                planned_food: [...prev.planned_food, newPlanned]
+            }));
+            addPlannedFoodDb(newPlanned);
         }
 
-        createShoppingList(id, increment);
+        createShoppingList(id, portionDiff);
+
+        setPendingPlanned(prev => {
+            const copy = {...prev}
+            delete copy[id]
+            return copy
+        });
+    }
+
+    const adjustPortions = (id, increment) => {
+        const newPortions = pendingPlanned[id] + increment;
+        if(newPortions < 0) return;
+        setPendingPlanned(prev => ({
+            ...prev,
+            [id]: newPortions
+        }))
     } 
+
+    const startPlanningFood = (id) => {
+        const chosenRecipe = data.foods.find(i => i.id === id);
+        let portions = chosenRecipe.portions;
+
+        const alreadyPlanned = data.planned_food.find(i => i.id === id);
+        if(alreadyPlanned) portions = alreadyPlanned.portions;
+
+        setPendingPlanned(prev => ({
+            ...prev,
+            [id]: portions
+        }));
+    };
 
     return (
         <div style={{margin: '0 auto'}} className="mt-4">
@@ -125,43 +165,71 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
                         className={"list-group-item d-flex"}
                         onClick={() => {onRecipeClicked(item.id);}}
                     >
-                    <div className="me-3" style ={{textAlign: 'left'}}>{item.name}</div>
-                        {data.planned_food.find(i => i.id === item.id) ? 
+                        <div style ={{textAlign: 'left'}}>{item.name}</div>
+                        {pendingPlanned[item.id] !== undefined &&
                             (
-                                <form className="ms-auto">
-                                    <div style={{display: 'flex'}}>
-                                        <button type="button" className="btn btn-sm btn-outline-secondary" 
-                                            onClick={(e) => {
-                                                e.stopPropagation(); 
-                                                adjustPortions(item.id, -1);}}
-                                        >
-                                            -
-                                        </button>
-                                        <input
-                                            name="portions"
-                                            type="number"
-                                            className="form-control"
-                                            value={data.planned_food.find(i => i.id === item.id).portions || ''}
-                                            readOnly
-                                            style={{width: '40px', textAlign: 'center', padding: '4px 0'}}
-                                        />
-                                        <button type="button" className="btn btn-sm btn-outline-secondary" 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                adjustPortions(item.id, 1);}}
-                                        >
-                                            +
-                                        </button>
-                                    </div>
-                                </form>
-                            ) 
-                            :
-                            (<button onClick={(e) => {
-                                e.stopPropagation();
-                                addPlannedFood(item.id);
-                            }}
-                            className="btn btn-secondary btn-sm ms-auto" type="button" >+</button>)
-                        }
+                                <div className="d-flex ms-auto me-2">
+                                    <button type="button" className="btn btn-sm btn-outline-secondary" 
+                                        onClick={(e) => {
+                                            e.stopPropagation(); 
+                                            adjustPortions(item.id, -1);}}
+                                    >
+                                        -
+                                    </button>
+                                    <input
+                                        name="portions"
+                                        type="number"
+                                        className="form-control"
+                                        value={pendingPlanned[item.id]}
+                                        readOnly
+                                        style={{width: '25px', textAlign: 'center', padding: '4px 0'}}
+                                        onClick={(e) => {e.stopPropagation();}}
+                                    />
+                                    <button type="button" className="btn btn-sm btn-outline-secondary" 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            adjustPortions(item.id, 1);}}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            )} 
+                            {pendingPlanned[item.id] === undefined ? (
+                                data.planned_food.some(recipe => recipe.id === item.id) ? (
+                                    (<button onClick={(e) => {
+                                        e.stopPropagation();
+                                        startPlanningFood(item.id);
+                                    }}
+                                    className="btn btn-secondary btn-sm ms-auto" type="button" 
+                                    style={{width:'32px', height:'32px'}}
+                                    >
+                                        {data.planned_food.find(recipe => recipe.id === item.id).portions} 
+                                    </button>)
+                                ) 
+                                    : 
+                                (<button onClick={(e) => {
+                                    e.stopPropagation();
+                                    startPlanningFood(item.id);
+                                }}
+                                className="btn btn-secondary btn-sm ms-auto" type="button" 
+                                style={{width:'32px', height:'32px'}}
+                                >
+                                    +
+                                </button>)
+                                ) 
+                                    :
+                                (
+                                <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    addPlannedFood(item.id);
+                                }}
+                                className="btn btn-secondary btn-sm" type="button" 
+                                style={{width:'32px', height:'32px'}}
+                                >
+                                    <i className="bi bi-check"></i>
+                                </button>
+                                )
+                            }
                     </li>
                 ))}
             </ul>

@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
-export default function IngredientForm({onAddData, includeAmount = false, initialName = ''}) {
+export default function IngredientForm({includeAmount = false, initialName = ''}) {
+
+    const {addToIngredients} = useOutletContext();
 
     const [form, setForm] = useState({
         name: initialName || '',
@@ -23,7 +26,7 @@ export default function IngredientForm({onAddData, includeAmount = false, initia
             return;
         }
 
-        onAddData(form);
+        addToIngredients(form);
 
         setForm({name: '', unit: 'g', cals: '', amount: ''})
     }
@@ -31,7 +34,7 @@ export default function IngredientForm({onAddData, includeAmount = false, initia
     return (
         <form 
             onSubmit={handleSubmit} 
-            style={{ width: '90%', margin: '0 auto'}} className=""
+            style={{ width: '90%', margin: '0 auto'}} className="mt-3"
         >
             <div className="mb-4">
                 <label htmlFor="ingredientName" className="form-label">

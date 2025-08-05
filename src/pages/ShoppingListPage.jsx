@@ -1,11 +1,28 @@
 import IngredientList from "../components/IngredientList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SearchedIngredientList from "../components/SearchedIngredientList";
 
 import { db } from "../firebase";
 import { collection, doc, getDocs, deleteDoc, setDoc } from "firebase/firestore";
 
 export default function ShoppingListPage({data, setData, isGuestMode}) {
+
+    const updateAllIngredientsWithCategory = async () => {
+        const updatedIngredients = data.ingredients.map(ingredient => ({
+            ...ingredient,
+            category: ingredient.category || "övrigt"
+        }));
+
+        for (const ingredient of updatedIngredients) {
+            await setDoc(doc(db, "ingredients", ingredient.id.toString()), ingredient, { merge: true });
+        }
+
+        console.log("All ingredients updated with category.");
+    };
+
+    // useEffect(() => {
+    //     updateAllIngredientsWithCategory();
+    // }, []);
 
     const [selectedIngredient, setSelectedIngredient] = useState(-1);
     const [ingredientAmount, setIngredientAmount] = useState('');
@@ -25,7 +42,8 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
     }
 
     const checkSearch = () => {
-        return data.ingredients.some(i => i.name.toLowerCase() === searchInput.toLowerCase());
+        const foundIngredient = data.ingredients.find(i => i.name.toLowerCase() === searchInput.toLowerCase());
+        if(foundIngredient) {setSelectedIngredient(foundIngredient.id); setSearchInput('');}
     }
 
     const handleIngredientClicked = (itemId) => {
@@ -160,62 +178,68 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
             id: item.id,
             name: ingredientFound.name,
             amount: roundedAmount,
-            unit: ingredientFound.unit
+            unit: ingredientFound.unit,
+            category: ingredientFound.category
         })
     }
+
+    const categories = ['kolonial', 'frukt och grönt', 'kött och chark', 'mejeri', 'bröd', 'frys', 'övrigt'];
 
     return (
         <div style={{margin: "50px auto 0 auto", width: "90%"}}>
             
-            <form className="d-flex">
-                <input
-                    name="search"
-                    type="text"
-                    className="form-control"
-                    value={searchInput}
-                    onChange={e => {setSearchInput(e.target.value); setSelectedIngredient(-1); setAmountFieldFocused(false)}}
-                    placeholder= {selectedIngredient === -1 ? "Lägg till" : data.ingredients.find(i => i.id === selectedIngredient).name}
-                    onFocus = {() => setAmountFieldFocused(false)}
-                />
-                <div className="input-group" style ={{maxWidth: "160px"}}>
+            <div className="mb-4" style={{position: 'relative'}}>
+                <form className="d-flex">
                     <input
-                        name="ingredientAmount"
+                        name="search"
+                        type="text"
                         className="form-control"
-                        type="number"
-                        value={ingredientAmount}
-                        onChange={(e) => setIngredientAmount(e.target.value)}
-                        placeholder="Mängd"
-                        onFocus={() => setAmountFieldFocused(true)}
+                        value={searchInput}
+                        onChange={e => {setSearchInput(e.target.value); setSelectedIngredient(-1); setAmountFieldFocused(false)}}
+                        placeholder= {selectedIngredient === -1 ? "Lägg till" : data.ingredients.find(i => i.id === selectedIngredient).name}
+                        onFocus = {() => setAmountFieldFocused(false)}
+                        onBlur = {() => checkSearch()}
                     />
-                    {(selectedIngredient !== -1 && searchInput === '') ? (
-                        <span className="input-group-text">
-                            {data.ingredients.find(i => i.id === selectedIngredient)?.unit || ""}
-                        </span>
-                    ) : ( (ingredientAmount !== '' || amountFieldFocused) &&
-                        <>
-                            <select
-                                id="unit"
-                                name="unit"
-                                className="form-select input-group-text"
-                                style={{maxWidth: '50px', textAlign: 'left'}}
-                                value={selectedUnit}
-                                onChange={(e) => setSelectedUnit(e.target.value)}
-                            >
-                                <option value="g">g</option>
-                                <option value="st">st</option>
-                                <option value="ml">ml</option>
-                                <option value="dl">dl</option>
-                                <option value="msk">msk</option>
-                                <option value="tsk">tsk</option>
-                            </select>
-                        </>
-                    )}
-                    <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
-                </div>
-            </form>
+                    <div className="input-group" style ={{maxWidth: "160px"}}>
+                        <input
+                            name="ingredientAmount"
+                            className="form-control"
+                            type="number"
+                            value={ingredientAmount}
+                            onChange={(e) => setIngredientAmount(e.target.value)}
+                            placeholder="Mängd"
+                            onFocus={() => setAmountFieldFocused(true)}
+                        />
+                        {(selectedIngredient !== -1 && searchInput === '') ? (
+                            <span className="input-group-text">
+                                {data.ingredients.find(i => i.id === selectedIngredient)?.unit || ""}
+                            </span>
+                        ) : ( (ingredientAmount !== '' || amountFieldFocused) &&
+                            <>
+                                <select
+                                    id="unit"
+                                    name="unit"
+                                    className="form-select input-group-text"
+                                    style={{maxWidth: '50px', textAlign: 'left'}}
+                                    value={selectedUnit}
+                                    onChange={(e) => setSelectedUnit(e.target.value)}
+                                >
+                                    <option value="g">g</option>
+                                    <option value="st">st</option>
+                                    <option value="ml">ml</option>
+                                    <option value="dl">dl</option>
+                                    <option value="msk">msk</option>
+                                    <option value="tsk">tsk</option>
+                                </select>
+                            </>
+                        )}
+                        <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
+                    </div>
+                </form>
                     
-                { selectedIngredient === -1 && ( ingredientAmount !== '' || amountFieldFocused ) && (
-                    <div style={{maxWidth: '160px', marginLeft: 'auto'}}>
+                { selectedIngredient === -1 && ( ingredientAmount !== '' || amountFieldFocused ) && searchInput !== '' && (
+                    <div style={{maxWidth: '160px', marginLeft: 'auto', position:'absolute', 
+                                    top:'100%', right:'0', zIndex:'1000', boxShadow: '0 4px 8px rgba(0,0,0,0.1)',}}>
                         <select
                             id="category"
                             name="category"
@@ -223,13 +247,9 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                             value={selectedCetegory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
                         >
-                            <option value="kolonial">Kolonial</option>
-                            <option value="frukt och grönt">Frukt och grönt</option>
-                            <option value="kött och chark">Kött och chark</option>
-                            <option value="mejeri">Mejeri</option>
-                            <option value="bröd">Bröd</option>
-                            <option value="frys">Frys</option>
-                            <option value="övrigt">Övrigt</option>
+                            {categories.map(c => 
+                                <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                            )}
                         </select>
                         <input
                             id="cals"
@@ -242,13 +262,24 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                         />
                     </div>
                 )}
+            </div>
+
             {searchInput !== '' && 
                 <div className="mb-4 mx-auto" style={{maxWidth: '86%'}}>
                     <SearchedIngredientList listItems = {searchItems} onSelectItem = {handleIngredientClicked} />
                 </div>
             }
+            {categories.map((category) => {
+                const filtered = shoppingList.filter(i => i.category === category);
+                if(filtered.length === 0) return null;
 
-            <IngredientList listItems={shoppingList} />
+                return (
+                    <div key = {category}>
+                        <p className="mb-1 ps-2 mt-3"><b>{category.charAt(0).toUpperCase() + category.slice(1)}</b></p>
+                        <IngredientList listItems={filtered} />
+                    </div>
+                );
+            })}
 
             <button onClick={() => clearShoppingList()} className="btn btn-secondary mt-4">Rensa inköpslista</button>
         </div>

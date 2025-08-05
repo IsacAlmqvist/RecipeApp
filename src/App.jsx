@@ -13,25 +13,42 @@ import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from "firebase/auth"
 
 import { useState, useEffect} from 'react';
-// import firebase from 'firebase/compat/app';
+
+import RecipePage from './components/RecipePage';
+import RecipeForm from './components/RecipeForm';
+import IngredientForm from './components/IngredientForm';
 
 function AppLayout({ isGuestMode }) {
+
+  /* TODO
+    - remove recipes (which removes relations also)
+    - edit recipes (and ingredients/keywords) (dont allow removing directly to ruin recipes)
+    - filter search by keywords - DONE
+    - format the recipe description
+    - removing/checking of planned meals
+    - removing/checking of from shopping list
+    - historical DB for recipe and ingredient history (maybe filter search by popularity)
+  */
 
   const [data, setData] = useState({
     foods: [],
     ingredients: [],
     food_ingredients: [],
     planned_food: [],
-    shopping_list: []
+    shopping_list: [],
+    recipe_keywords: [],
+    keywords: []
   });
 
   const loadData = async () => {
-    const [foodsSnap, ingredientsSnap, relationsSnap, planned_foodSnap, shopping_listSnap] = await Promise.all([
+    const [foodsSnap, ingredientsSnap, relationsSnap, planned_foodSnap, shopping_listSnap, recipe_keywordsSnap, keywordsSnap] = await Promise.all([
       getDocs(collection(db, "foods")),
       getDocs(collection(db, "ingredients")),
       getDocs(collection(db, "food_ingredients")),
       getDocs(collection(db, "planned_food")),
       getDocs(collection(db, "shopping_list")),
+      getDocs(collection(db, "recipe_keywords")),
+      getDocs(collection(db, "keywords")),
     ]);
 
     const foods = foodsSnap.docs.map(doc => doc.data());
@@ -39,8 +56,10 @@ function AppLayout({ isGuestMode }) {
     const food_ingredients = relationsSnap.docs.map(doc => doc.data());
     const planned_food = planned_foodSnap.docs.map(doc => doc.data());
     const shopping_list = shopping_listSnap.docs.map(doc => doc.data());
+    const recipe_keywords = recipe_keywordsSnap.docs.map(doc => doc.data());
+    const keywords = keywordsSnap.docs.map(doc => doc.data());
 
-    return {foods, ingredients, food_ingredients, planned_food, shopping_list};
+    return {foods, ingredients, food_ingredients, planned_food, shopping_list, recipe_keywords, keywords};
   };
   
   useEffect(() => {
@@ -75,11 +94,19 @@ function AppLayout({ isGuestMode }) {
           {id: 10, food_id: 4, ingredient_id: 6, amount: 140},
       ] ; 
       const planned_food = [
-        {id: 1, recipe_id: 3, portions: 4},
-        {id: 2, recipe_id: 4, portions: 2}
+        {id: 1, portions: 4},
+        {id: 2, portions: 2}
       ]
       const shopping_list = [
         {id: 2, amount: 3}
+      ]
+
+      const recipe_keywords = [
+        {id: 1, recipe_id: 1, keyword_id: 1}
+      ]
+
+      const keywords = [
+        {id: 1, keyword: 'soppa'}
       ]
 
       setData({
@@ -87,7 +114,9 @@ function AppLayout({ isGuestMode }) {
         ingredients: ingredients,
         food_ingredients: food_ingredients,
         planned_food: planned_food,
-        shopping_list: shopping_list
+        shopping_list: shopping_list,
+        recipe_keywords: recipe_keywords,
+        keywords: keywords
       });
     }
 
@@ -103,8 +132,18 @@ function AppLayout({ isGuestMode }) {
   return (
     <div>
       <Routes>
-        <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}/>
-        <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
+        <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}>
+          <Route index element = {<RecipePage />}/>
+          <Route path = "recipe/:id" element = {<RecipePage/>}/>
+        </Route>
+
+        <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}>
+          <Route index element = {<RecipeForm />}/>
+          <Route path = "edit-recipe/:id" element = {<RecipeForm />}/>
+          <Route path = "recipe" element = {<RecipeForm />}/>
+          <Route path = "ingredient" element = {<IngredientForm />}/>
+        </Route>
+
         <Route path = "/shoppingList" element = {<ShoppingListPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
         <Route path = "/plannedFood" element = {<PlannedFoodPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
       </Routes>

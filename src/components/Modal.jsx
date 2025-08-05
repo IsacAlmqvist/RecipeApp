@@ -3,7 +3,7 @@ export default function Modal({children, onClose}) {
         <div className="shadow rounded"
             style={{
             position: "fixed",
-            top: 260, left: 0, right: 0, bottom: 160,
+            top: 140, left: 0, right: 0, bottom: 140,
             backgroundColor: "rgb(230, 230, 230)",
             justifyContent: "center",
             alignItems: "center",
@@ -12,7 +12,7 @@ export default function Modal({children, onClose}) {
             margin: "0 auto"
 
         }} >
-            <button style={{display: "block", marginLeft: "auto", marginRight: "6px", marginTop: "6px"}} className="btn btn-secondary" onClick={onClose}>
+            <button style={{display: "block", marginLeft: "auto", marginRight: "6px", marginTop: "6px", marginBottom:'-20px'}} className="btn btn-secondary" onClick={onClose}>
                 x
             </button>
             {children}

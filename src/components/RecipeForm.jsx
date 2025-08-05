@@ -3,8 +3,13 @@ import IngredientList from "./IngredientList";
 import IngredientForm from "./IngredientForm";
 import Modal from "./Modal";
 import SearchedIngredientList from "./SearchedIngredientList";
+import WordList from "./WordList";
+import SearchedKeywordList from "./SearchedKeywordList";
 
-export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
+import { useOutletContext } from "react-router-dom";
+
+export default function RecipeForm() {
+    const {data, addToRecipes, addToIngredients} = useOutletContext();
 
     const [selectedIngredient, setSelectedIngredient] = useState(-1);
 
@@ -12,14 +17,17 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
         name: '',
         ingredients: [],
         description: '',
-        portions: 4
+        portions: 4,
+        keywords: []
     })
 
     const [ingredientAmount, setIngredientAmount] = useState('');
 
     const [searchInput, setSearchInput] = useState('');
 
-    const [showIngredientForm, setShowIngredientForm] = useState(false)
+    const [showIngredientForm, setShowIngredientForm] = useState(false);
+
+    const [keywordSearch, setKeywordSearch] = useState('');
 
     let listItems = data.ingredients;
     
@@ -54,7 +62,7 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
 
     const onAddNewIngredient = (newIngredient) => {
         setShowIngredientForm(false);
-        const newId = onAddIngredient(newIngredient)
+        const newId = addToIngredients(newIngredient)
 
         if(newId !== -1) {
             setForm( prev => ({
@@ -75,17 +83,16 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
         setForm( prev => ({...prev, [name]: value}))
     }
 
-    const handleSubmit = (entry) => {
-        entry.preventDefault();
+    const handleSubmit = () => {
 
         if(!form.name) {
             console.log("saknas namn");
             return;
         }
 
-        onAddRecipe(form);
+        addToRecipes(form);
 
-        setForm({name: '', ingredients: [], description: '', portions: 4});
+        setForm({name: '', ingredients: [], description: '', portions: 4, keywords: []});
         setSelectedIngredient(-1);
     }
 
@@ -93,12 +100,21 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
         setShowIngredientForm(true);
     }
 
+    const handleKeywordClicked = (id) => {
+        let newKeyword = '';
+        if(id === -1) {
+            newKeyword = keywordSearch.trim().toLowerCase();
+        } else {
+            newKeyword = data.keywords.find(k => k.id === id).keyword.trim().toLowerCase();
+        }
+        if(!form.keywords.includes(newKeyword)) setForm(prev => ({...prev, keywords: [...prev.keywords, newKeyword]}));
+        setKeywordSearch('');
+    }
 
     return (
         <>
         <form 
-            onSubmit={handleSubmit} 
-            style={{ width: '90%', margin: '0 auto'}} className="mt-4"
+            style={{ width: '90%', margin: '0 auto'}} className="mt-3"
         >
             <div className="mb-4">
                 <label htmlFor="name" className="form-label">
@@ -146,7 +162,7 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
                             </span>
                         )}
                     </div>
-                    <button onClick={handleAddIngredientFinal} type="button" className="btn btn-primary">+</button>
+                    <button onClick={() => handleAddIngredientFinal()} type="button" className="btn btn-primary">+</button>
                 </div>
             </div>
 
@@ -154,7 +170,7 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
                 <>
                     <SearchedIngredientList listItems = {listItems} onSelectItem = {handleIngredientClicked} />
 
-                    <button type="button" className="btn btn-primary mb-3" onClick={onAddNewClicked}>
+                    <button type="button" className="btn btn-primary mb-3" onClick={() => onAddNewClicked()}>
                         ➕ Lägg till ny
                     </button>
                 </>
@@ -211,7 +227,35 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
                 </div>
             </div>
 
-            <button type="submit" className="btn btn-primary">Lägg till</button>
+            <div>
+                <label htmlFor="keywords" className="form-label">
+                    Nyckelord
+                </label>
+
+                {form.keywords.length > 0 && <WordList listItems={form.keywords} />}
+                
+                <div className="d-flex">
+                    <input
+                        id="keywords"
+                        name="keywords"
+                        type="text"
+                        className="form-control"
+                        value={keywordSearch}
+                        onChange={e => setKeywordSearch(e.target.value)}
+                        placeholder= {"Lägg till nyckelord"}
+                    />
+                    
+                    <button onClick={() => handleKeywordClicked(-1)} type="button" className="btn btn-primary">+</button>
+                </div>
+            </div>
+
+            {keywordSearch !== '' && 
+                <>
+                    <SearchedKeywordList listItems = {data.keywords.filter(w => w.keyword.includes(keywordSearch.toLowerCase()))} onSelectItem = {handleKeywordClicked} />
+                </>
+            }
+
+            <button onClick={() => handleSubmit()} className="mt-4 btn btn-primary">Lägg till</button>
 
         </form>
 
@@ -224,6 +268,7 @@ export default function RecipeForm({data, onAddRecipe, onAddIngredient}) {
             </Modal>
             )
         }
+
         </>
     );
 }

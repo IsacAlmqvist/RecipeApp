@@ -2,7 +2,7 @@ import { useState } from "react";
 import { db } from "../firebase";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
 
-export default function HomePageIngredients({listItems, onIngredientClicked, data, setData, isGuestMode}) {
+export default function IngredientsUnused({listItems, onIngredientClicked, data, setData, isGuestMode}) {
 
     const [timers, setTimers] = useState({});
 
