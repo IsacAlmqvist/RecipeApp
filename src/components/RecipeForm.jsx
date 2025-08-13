@@ -16,7 +16,7 @@ export default function RecipeForm() {
     const [form, setForm] = useState({
         name: '',
         ingredients: [],
-        description: '',
+        description: [''],
         portions: 4,
         keywords: []
     })
@@ -92,7 +92,7 @@ export default function RecipeForm() {
 
         addToRecipes(form);
 
-        setForm({name: '', ingredients: [], description: '', portions: 4, keywords: []});
+        setForm({name: '', ingredients: [], description: [''], portions: 4, keywords: []});
         setSelectedIngredient(-1);
     }
 
@@ -103,12 +103,56 @@ export default function RecipeForm() {
     const handleKeywordClicked = (id) => {
         let newKeyword = '';
         if(id === -1) {
-            newKeyword = keywordSearch.trim().toLowerCase();
+            newKeyword = keywordSearch.charAt(0).toUpperCase() + keywordSearch.split(1);
         } else {
-            newKeyword = data.keywords.find(k => k.id === id).keyword.trim().toLowerCase();
+            newKeyword = data.keywords.find(k => k.id === id).keyword.charAt(0).toUpperCase + keyword.split(1);
         }
         if(!form.keywords.includes(newKeyword)) setForm(prev => ({...prev, keywords: [...prev.keywords, newKeyword]}));
         setKeywordSearch('');
+    }
+
+    const deleteIngredient = (index) => {
+        setForm((prev) => ({
+            ...prev,
+            ingredients: prev.ingredients.filter(i => i.id !== index)
+        }));
+    }
+
+    const addStep = () => {
+        setForm(prev => ({
+            ...prev,
+            description: [...prev.description, '']
+        }));
+    }
+
+    const deleteStep = (index) => {
+        if(form.description.length === 1) {
+            setForm(prev => ({
+                ...prev,
+                description: ['']
+            }));
+        } else {
+            setForm(prev => ({
+                ...prev,
+                description: prev.description.filter((_,i) => i !== index)
+            }));
+        }
+    }
+
+    const handleStepChange = (index, value) => {
+        setForm(prev => ({
+            ...prev,
+            description: prev.description.map((text,i) => 
+                i === index ? value : text
+            )
+        }))
+    }
+
+    const deleteKeyword = (index) => {
+        setForm(prev => ({
+            ...prev,
+            keywords: prev.keywords.filter((_,i) => i !== index)
+        }));
     }
 
     return (
@@ -130,12 +174,12 @@ export default function RecipeForm() {
                     placeholder="T.ex. pannkakor"
                 />
             </div>
-            <div className="mb-4">
+            <div className="mb-2">
                 <label htmlFor="search" className="form-label">
                     Ingredienser
                 </label>
 
-                {form.ingredients.length > 0 && <IngredientList listItems={form.ingredients} />}
+                {form.ingredients.length > 0 && <IngredientList listItems={form.ingredients} deleteButton={true} onDelete={deleteIngredient}/>}
                 
                 <div className="d-flex">
                     <input
@@ -170,25 +214,39 @@ export default function RecipeForm() {
                 <>
                     <SearchedIngredientList listItems = {listItems} onSelectItem = {handleIngredientClicked} />
 
-                    <button type="button" className="btn btn-primary mb-3" onClick={() => onAddNewClicked()}>
+                    <button type="button" className="btn btn-primary" onClick={() => onAddNewClicked()}>
                         ➕ Lägg till ny
                     </button>
                 </>
             }
 
-            <div className="mb-4">
-                <label htmlFor="description" className="form-label">
-                    Beskrivning
+            <div className="mb-4 mt-3">
+                <label className="form-label fw-bold">
+                    Steg:
                 </label>
-                <input
-                    id="description"
-                    name="description"
-                    type="text"
-                    className="form-control"
-                    value={form.description}
-                    onChange={handleChange}
-                    placeholder="beskriv hur man gör"
-                />
+                {form.description.map((step, index) => (
+                    <div className="d-flex align-items-center mb-2" key={index}>
+                        <input
+                            name="description"
+                            type="text"
+                            className="form-control"
+                            value={step}
+                            onChange={(e) => handleStepChange(index, e.target.value)}
+                            placeholder={`Steg ${index + 1}`}
+                        />
+                        <button 
+                            type = "button"
+                            className="btn btn-sm ms-2 p-0 d-flex align-items-center justify-content-center"
+                            style={{ width: "20px", height: "19px"}}
+                            onClick={() => deleteStep(index)}
+                        >
+                            <i className="bi bi-x fs-6 text-danger"></i>
+                        </button>
+                    </div>
+                ))}
+                <button type="button" className="btn btn-sm btn-outline-secondary mt-1" onClick={addStep}>
+                    + Lägg till steg
+                </button>
             </div>
 
             <div className="mb-4">
@@ -232,7 +290,7 @@ export default function RecipeForm() {
                     Nyckelord
                 </label>
 
-                {form.keywords.length > 0 && <WordList listItems={form.keywords} />}
+                {form.keywords.length > 0 && <WordList listItems={form.keywords} onDelete={deleteKeyword} />}
                 
                 <div className="d-flex">
                     <input
@@ -255,7 +313,7 @@ export default function RecipeForm() {
                 </>
             }
 
-            <button onClick={() => handleSubmit()} className="mt-4 btn btn-primary">Lägg till</button>
+            <button onClick={(e) => {e.preventDefault(); handleSubmit();}} className="mt-4 btn btn-primary">Lägg till</button>
 
         </form>
 

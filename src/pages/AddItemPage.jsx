@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { db } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
 
@@ -39,12 +37,6 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             )))
         }
     };
-
-    const [toggleIndex, setToggleIndex] = useState(0);
-
-    const onToggleClick = (index) => {
-        setToggleIndex(index)
-    }
 
     // TODO: if item name exists already, replace it
     // currently, nothing happens if name exists
@@ -100,7 +92,7 @@ export default function AddItemPage({data, setData, isGuestMode}) {
         const newKeywordRelations = [];
 
         itemToAdd.keywords.forEach((word, index) => {
-            const existingKeyword = data.keywords.find(k => k.keyword.toLowerCase() === word);
+            const existingKeyword = data.keywords.find(k => k.keyword === word);
 
             let keywordId;
             if(existingKeyword) {

@@ -1,20 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import RecipePage from '../components/RecipePage';
 import SearchBar from '../components/SearchBar';
 import HomePageRecipes from '../components/HomePageRecipes';
 import FilterList from '../components/FilterList';
+import { useNavigate } from 'react-router-dom';
 
 export default function HomePage({data, setData, isGuestMode}) {
     
-    const [selectedIndex, setSelectedIndex] = useState(-1);
-    const [toggleIndex, setToggleIndex] = useState(0);
-    const [showRecipe, setShowRecipe] = useState(false);
     const [searchInput, setSearchInput] = useState('');
 
     const [selectedFilters, setSelectedFilters] = useState([]);
     const [openFilters, setOpenFilters] = useState(false);
 
-    let listItems = toggleIndex === 0 ? data.foods : data.ingredients;
+    let listItems = data.foods;
     
     if(searchInput !== '') {
         listItems = listItems.filter(item => item.name.toLowerCase()
@@ -29,7 +26,7 @@ export default function HomePage({data, setData, isGuestMode}) {
         recipeKeywordMap[rel.recipe_id].add(rel.keyword_id);
     });
 
-    if(toggleIndex === 0 && selectedFilters.length > 0) {
+    if(selectedFilters.length > 0) {
         listItems = listItems.filter(item => {
                 const keywords = recipeKeywordMap[item.id] || new Set();
                 return selectedFilters.some(filterId => keywords.has(filterId)); 
@@ -37,16 +34,10 @@ export default function HomePage({data, setData, isGuestMode}) {
         );
     }
 
+    const navigate = useNavigate();
+
     const handleListItemClicked = (itemId) => {
-        setSelectedIndex(itemId);
-        toggleIndex === setShowRecipe(true);
-    }
-
-    function onToggleClick (index) {
-
-        toggleIndex === index || setSelectedIndex(-1);
-
-        setToggleIndex(index);
+        navigate(`/recipe/${itemId}`);
     }
 
     const ref = useRef();
@@ -71,36 +62,26 @@ export default function HomePage({data, setData, isGuestMode}) {
 
     return (
         <>
-            {
-                showRecipe ? 
-                    <RecipePage data = {data} itemId = {selectedIndex} />
-                :
-                <>
-                    <div className="d-flex" style={{margin: '48px auto 0 auto', width:'90%'}} >
-                        <div style={{flex:'1'}}>
-                            <SearchBar input={searchInput} setInput={setSearchInput} />
-                        </div>
-
-                        {toggleIndex === 0 && 
-                            <div ref={ref} style={{position:'relative', width:'120px'}}>
-                                <button
-                                    name="filter"
-                                    className='formSelect input-group-text'
-                                    onClick={() => setOpenFilters((prev) => (!prev))}
-                                    style={{width: '100%'}}
-                                >
-                                Filter 
-                                </button>
-                                {openFilters && <FilterList listItems={data.keywords} selectedFilters={selectedFilters} toggleItemMarked={toggleItemMarked} /> }
-                            </div>
-                        }
-                    </div>
-                    <div style={{width: '90%', margin: '0 auto'}}>
-                        <HomePageRecipes listItems = {listItems} onRecipeClicked = {handleListItemClicked} 
-                            data = {data} setData = {setData} isGuestMode = {isGuestMode}/>
-                    </div>
-                </>
-            }
+            <div className="d-flex" style={{margin: '48px auto 0 auto', width:'90%'}} >
+                <div style={{flex:'1'}}>
+                    <SearchBar input={searchInput} setInput={setSearchInput} />
+                </div>
+                <div ref={ref} style={{position:'relative', width:'120px'}}>
+                    <button
+                        name="filter"
+                        className='formSelect input-group-text'
+                        onClick={() => setOpenFilters((prev) => (!prev))}
+                        style={{width: '100%'}}
+                    >
+                    Filter
+                    </button>
+                    {openFilters && <FilterList listItems={data.keywords} selectedFilters={selectedFilters} toggleItemMarked={toggleItemMarked} /> }
+                </div>
+            </div>
+            <div style={{width: '90%', margin: '0 auto'}}>
+                <HomePageRecipes listItems = {listItems} onListItemClicked = {handleListItemClicked}
+                    data = {data} setData = {setData} isGuestMode = {isGuestMode} />
+            </div>
         </>
     );
 }

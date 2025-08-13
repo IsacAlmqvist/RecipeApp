@@ -2,8 +2,9 @@ import { useState } from "react";
 
 import { db } from "../firebase";
 import { setDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
+import { Link } from "react-router-dom";
 
-export default function HomePageRecipes({listItems, onRecipeClicked, data, setData, isGuestMode}) {
+export default function HomePageRecipes({listItems, data, setData, isGuestMode, onListItemClicked}) {
 
     const [pendingPlanned, setPendingPlanned] = useState({});
 
@@ -162,8 +163,8 @@ export default function HomePageRecipes({listItems, onRecipeClicked, data, setDa
                 {listItems.map((item) => (
                     <li
                         key={item.id}
-                        className={"list-group-item d-flex"}
-                        onClick={() => {onRecipeClicked(item.id);}}
+                        className={"d-flex list-group-item"}
+                        onClick={() => onListItemClicked(item.id)}
                     >
                         <div style ={{textAlign: 'left'}}>{item.name}</div>
                         {pendingPlanned[item.id] !== undefined &&

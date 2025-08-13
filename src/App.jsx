@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route} from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import AddItemPage from './pages/AddItemPage';
 import ShoppingListPage from './pages/ShoppingListPage';
@@ -21,7 +21,8 @@ import IngredientForm from './components/IngredientForm';
 function AppLayout({ isGuestMode }) {
 
   /* TODO
-    - remove recipes (which removes relations also)
+    - small thing: when you go back from receipe and came from planned food page, go there
+    - remove recipes (which removes relations also) - DONE
     - edit recipes (and ingredients/keywords) (dont allow removing directly to ruin recipes)
     - filter search by keywords - DONE
     - format the recipe description
@@ -66,10 +67,10 @@ function AppLayout({ isGuestMode }) {
     // load mock data if guest mode
     if(isGuestMode) {
       const foods = [
-        {id: 1, name: 'Tomatsoppa', portions: 4, description: 'Koka, sen mixa \nklart!'},
-        {id: 2, name: 'Pannkakor', portions: 4, description: 'veva, stek'},
-        {id: 3, name: 'Köttfärssås', portions: 4, description: 'gör pasta \ngör köttsås'},
-        {id: 4, name: 'Pasta Carbonara', portions: 4, description: 'gör så\ngör pasta\n blanda'}
+        {id: 1, name: 'Tomatsoppa', portions: 4, description: ['steg 1', 'steg 2']},
+        {id: 2, name: 'Pannkakor', portions: 4, description: ['steg 1', 'steg 2']},
+        {id: 3, name: 'Köttfärssås', portions: 4, description: ['steg 1', 'steg 2']},
+        {id: 4, name: 'Pasta Carbonara', portions: 4, description: ['steg 1', 'steg 2']}
       ] ;
       const ingredients = [
           {id: 1, name: 'Tomat', unit: 'g', cals: 200},
@@ -106,7 +107,7 @@ function AppLayout({ isGuestMode }) {
       ]
 
       const keywords = [
-        {id: 1, keyword: 'soppa'}
+        {id: 1, keyword: 'Soppa'}
       ]
 
       setData({
@@ -132,13 +133,11 @@ function AppLayout({ isGuestMode }) {
   return (
     <div>
       <Routes>
-        <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}>
-          <Route index element = {<RecipePage />}/>
-          <Route path = "recipe/:id" element = {<RecipePage/>}/>
-        </Route>
+        <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}/>
+        <Route path = "/recipe/:id" element = {<RecipePage data={data} setData={setData} isGuestMode={isGuestMode}/>}/>
 
         <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}>
-          <Route index element = {<RecipeForm />}/>
+          <Route index element = {<Navigate to="recipe" replace />}/>
           <Route path = "edit-recipe/:id" element = {<RecipeForm />}/>
           <Route path = "recipe" element = {<RecipeForm />}/>
           <Route path = "ingredient" element = {<IngredientForm />}/>
@@ -183,7 +182,7 @@ export default function App() {
 
   return (
     <>
-      <button
+      {/* <button
         onClick={handleSignOut}
         style={{
           position:'fixed',
@@ -195,7 +194,7 @@ export default function App() {
         className='btn btn-sm btn-outline-secondary'
       >
         Logga ut
-      </button>
+      </button> */}
 
       <Router>
         <AppLayout isGuestMode={isGuestMode} />
