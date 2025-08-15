@@ -10,6 +10,7 @@ export default function SearchBar ({input, setInput}) {
                 onChange={e => setInput(e.target.value)}
                 placeholder="Sök"
                 style={{width:'100%'}}
+                autoComplete="off"
             />
         </form>
     );

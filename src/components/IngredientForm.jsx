@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 
-export default function IngredientForm({includeAmount = false, initialName = ''}) {
+export default function IngredientForm({includeAmount = false, initialName = '', addToIngredients: addToIngredientsProp}) {
 
-    const {addToIngredients} = useOutletContext();
+    const outletContext = useOutletContext() || {};
+    const addToIngredients = addToIngredientsProp ?? outletContext.addToIngredients;
 
     const [form, setForm] = useState({
         name: initialName || '',
         unit: 'g',
         category: 'kolonial',
         cals: '',
-        amount: ''
+        amount: '',
     })
 
     const handleChange = (e) => {
@@ -26,15 +27,18 @@ export default function IngredientForm({includeAmount = false, initialName = ''}
             return;
         }
 
+        console.log(form);
+        console.log(entry);
         addToIngredients(form);
 
-        setForm({name: '', unit: 'g', cals: '', amount: ''})
+        setForm({name: '', unit: 'g', category: 'kolonial', cals: '', amount: ''})
     }
 
     return (
         <form 
             onSubmit={handleSubmit} 
             style={{ width: '90%', margin: '0 auto'}} className="mt-3"
+            autoComplete="off"
         >
             <div className="mb-4">
                 <label htmlFor="ingredientName" className="form-label">

@@ -27,8 +27,10 @@ export default function RecipePage({data, setData, isGuestMode}) {
             }
         });
     
-    const editRecipe = () => {
+    const navigate = useNavigate();
 
+    const editRecipe = () => {
+        navigate(`/addItem/edit-recipe/${recipe.id}`)
     }
 
     const deleteRecipe = () => {
@@ -74,8 +76,6 @@ export default function RecipePage({data, setData, isGuestMode}) {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    const navigate = useNavigate();
 
     if(!recipe) return <></>;
 

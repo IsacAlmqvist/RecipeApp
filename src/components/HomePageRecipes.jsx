@@ -17,7 +17,7 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
             try {
                 await deleteDoc(doc(db, "planned_food", id.toString()));
             } catch (error) {
-                console.error("error deleting planned food");
+                console.error("error deleting planned food" + error);
             }
         }
     }
@@ -46,7 +46,7 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
 
     const createShoppingList = (recipeId, portionsAdded) => {
 
-        const ingredients = data.food_ingredients.filter(item => item.food_id === recipeId);
+        const ingredients = data.food_ingredients.filter(item => item.food_id === recipeId && item.addToShoppingList);
 
         const shoppingListCopy = [...data.shopping_list];
 

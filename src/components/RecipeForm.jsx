@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import IngredientList from "./IngredientList";
 import IngredientForm from "./IngredientForm";
 import Modal from "./Modal";
@@ -7,8 +7,16 @@ import WordList from "./WordList";
 import SearchedKeywordList from "./SearchedKeywordList";
 
 import { useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export default function RecipeForm() {
+
+    const location = useLocation();
+    const isEditing = location.pathname.includes("edit");
+    const params = useParams();
+
+    const navigate = useNavigate();
+
     const {data, addToRecipes, addToIngredients} = useOutletContext();
 
     const [selectedIngredient, setSelectedIngredient] = useState(-1);
@@ -20,6 +28,16 @@ export default function RecipeForm() {
         portions: 4,
         keywords: []
     })
+
+    useEffect(() => {
+        if(isEditing) {
+            const recipeToEdit = data.foods.find(f => f.id === params.id);
+            // eslint-disable-next-line no-unused-vars
+            const { id, ...rest } = recipeToEdit;
+            setForm(rest);
+        }
+    }, [isEditing, data, params.id]);
+    
 
     const [ingredientAmount, setIngredientAmount] = useState('');
 
@@ -51,7 +69,7 @@ export default function RecipeForm() {
         const newIngredientUnit = tempIngredient.unit || 'g';
 
         const newIngredient = { id: selectedIngredient, name: newIngredientName, 
-            amount: parseFloat(ingredientAmount) || 0, unit: newIngredientUnit};
+            amount: parseFloat(ingredientAmount) || 0, unit: newIngredientUnit, addToShoppingList: true};
 
         !form.ingredients.find(i => i.id === newIngredient.id) && 
             setForm(prev => ({...prev, ingredients: [...prev.ingredients, newIngredient]}));
@@ -62,7 +80,7 @@ export default function RecipeForm() {
 
     const onAddNewIngredient = (newIngredient) => {
         setShowIngredientForm(false);
-        const newId = addToIngredients(newIngredient)
+        const newId = addToIngredients(newIngredient);
 
         if(newId !== -1) {
             setForm( prev => ({
@@ -70,11 +88,13 @@ export default function RecipeForm() {
                     id: newId,
                     name: newIngredient.name,
                     amount: parseFloat(newIngredient.amount) || 0,
-                    unit: newIngredient.unit
+                    unit: newIngredient.unit,
+                    addToShoppingList: true
                 }]
             }));
         }
 
+        setSearchInput('');
         setIngredientAmount('');
     }
 
@@ -90,8 +110,9 @@ export default function RecipeForm() {
             return;
         }
 
-        addToRecipes(form);
+        addToRecipes(form, isEditing);
 
+        if(isEditing) navigate(`/recipe/${params.id}`);
         setForm({name: '', ingredients: [], description: [''], portions: 4, keywords: []});
         setSelectedIngredient(-1);
     }
@@ -105,7 +126,8 @@ export default function RecipeForm() {
         if(id === -1) {
             newKeyword = keywordSearch.charAt(0).toUpperCase() + keywordSearch.split(1);
         } else {
-            newKeyword = data.keywords.find(k => k.id === id).keyword.charAt(0).toUpperCase + keyword.split(1);
+            const kw = data.keywords.find(k => k.id === id).keyword;
+            newKeyword = kw.charAt(0).toUpperCase + kw.split(1);
         }
         if(!form.keywords.includes(newKeyword)) setForm(prev => ({...prev, keywords: [...prev.keywords, newKeyword]}));
         setKeywordSearch('');
@@ -155,15 +177,32 @@ export default function RecipeForm() {
         }));
     }
 
+    const handleToggleIncludeShoppingList = (ingredientId) => {
+        setForm(prev => ({
+            ...prev,
+            ingredients: prev.ingredients.map((ingredient) => 
+                ingredient.id === ingredientId
+                ? {...ingredient, addToShoppingList: !ingredient.addToShoppingList}
+                : ingredient
+            )
+        }))
+    }
+
     return (
         <>
+        {isEditing &&
+            <button type="button" onClick={() => navigate(`/recipe/${params.id}`)} 
+                className="btn btn-sm rounded-circle btn-outline-dark me-auto d-flex align-items-center justify-content-center"
+                style={{width: '32px', height:'32px', paddingRight:'10px', position:'fixed'}}
+            >
+                <i className="bi bi-chevron-left fs-6"></i>
+            </button>
+        }
         <form 
-            style={{ width: '90%', margin: '0 auto'}} className="mt-3"
+            style={{ width: '90%', margin: '0 auto'}} className="mt-4"
+            autoComplete="off"
         >
             <div className="mb-4">
-                <label htmlFor="name" className="form-label">
-                    Namn
-                </label>
                 <input
                     id="name"
                     name="name"
@@ -171,7 +210,7 @@ export default function RecipeForm() {
                     className="form-control"
                     value={form.name}
                     onChange={handleChange}
-                    placeholder="T.ex. pannkakor"
+                    placeholder="Namn"
                 />
             </div>
             <div className="mb-2">
@@ -179,7 +218,8 @@ export default function RecipeForm() {
                     Ingredienser
                 </label>
 
-                {form.ingredients.length > 0 && <IngredientList listItems={form.ingredients} deleteButton={true} onDelete={deleteIngredient}/>}
+                {form.ingredients.length > 0 && <IngredientList listItems={form.ingredients} 
+                        deleteButton={true} onDelete={deleteIngredient} onToggle = {handleToggleIncludeShoppingList}/>}
                 
                 <div className="d-flex">
                     <input
@@ -188,7 +228,7 @@ export default function RecipeForm() {
                         type="text"
                         className="form-control"
                         value={searchInput}
-                        onChange={e => setSearchInput(e.target.value)}
+                        onChange={e => {setSearchInput(e.target.value); setSelectedIngredient(-1)}}
                         placeholder= {selectedIngredient === -1 ? "Sök" : data.ingredients.find(i => i.id === selectedIngredient).name}
                     />
                     <div className="input-group">
@@ -199,6 +239,7 @@ export default function RecipeForm() {
                             value={ingredientAmount}
                             onChange={(e) => setIngredientAmount(e.target.value)}
                             placeholder="Mängd"
+                            readOnly={selectedIngredient === -1}
                         />
                         {selectedIngredient !== -1 && (
                             <span className="input-group-text">
@@ -313,7 +354,7 @@ export default function RecipeForm() {
                 </>
             }
 
-            <button onClick={(e) => {e.preventDefault(); handleSubmit();}} className="mt-4 btn btn-primary">Lägg till</button>
+            <button type="button" onClick={(e) => {e.preventDefault(); handleSubmit();}} className="mt-4 btn btn-primary">Lägg till</button>
 
         </form>
 
@@ -321,7 +362,7 @@ export default function RecipeForm() {
 
             <Modal className="" onClose={() => setShowIngredientForm(false)}>
                 <IngredientForm initialName = {searchInput} 
-                    onAddData={(form) => {onAddNewIngredient(form); setSearchInput('');}}
+                    addToIngredients={onAddNewIngredient}
                     includeAmount={true}/>
             </Modal>
             )

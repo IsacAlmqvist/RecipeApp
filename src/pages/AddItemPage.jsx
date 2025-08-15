@@ -66,10 +66,9 @@ export default function AddItemPage({data, setData, isGuestMode}) {
         }
 
         return newId;
-
     }
 
-    const addToRecipes = (itemToAdd) => {
+    const addToRecipes = (itemToAdd, isEditing) => {
 
         const newId = Math.max(...data.foods.map(item => item.id || 0), 0) + 1;
         const newName = itemToAdd.name.charAt(0).toUpperCase() + itemToAdd.name.slice(1);
@@ -85,7 +84,8 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             id: Math.max(...data.food_ingredients.map(item => item.id || 0), 0) + 1 + index,
             food_id: newId,
             ingredient_id: ingredient.id,
-            amount: ingredient.amount
+            amount: ingredient.amount,
+            addToShoppingList: ingredient.addToShoppingList
         }));
 
         const newKeywords = [];

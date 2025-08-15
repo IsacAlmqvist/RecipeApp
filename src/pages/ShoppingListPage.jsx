@@ -1,24 +1,26 @@
 import IngredientList from "../components/IngredientList";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import SearchedIngredientList from "../components/SearchedIngredientList";
+
+// import { useEffect } from "react";
 
 import { db } from "../firebase";
 import { collection, doc, getDocs, deleteDoc, setDoc } from "firebase/firestore";
 
 export default function ShoppingListPage({data, setData, isGuestMode}) {
 
-    const updateAllIngredientsWithCategory = async () => {
-        const updatedIngredients = data.ingredients.map(ingredient => ({
-            ...ingredient,
-            category: ingredient.category || "övrigt"
-        }));
+    // const updateAllIngredientsWithCategory = async () => {
+    //     const updatedIngredients = data.ingredients.map(ingredient => ({
+    //         ...ingredient,
+    //         category: ingredient.category || "övrigt"
+    //     }));
 
-        for (const ingredient of updatedIngredients) {
-            await setDoc(doc(db, "ingredients", ingredient.id.toString()), ingredient, { merge: true });
-        }
+    //     for (const ingredient of updatedIngredients) {
+    //         await setDoc(doc(db, "ingredients", ingredient.id.toString()), ingredient, { merge: true });
+    //     }
 
-        console.log("All ingredients updated with category.");
-    };
+    //     console.log("All ingredients updated with category.");
+    // };
 
     // useEffect(() => {
     //     updateAllIngredientsWithCategory();
@@ -189,7 +191,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
         <div style={{margin: "50px auto 0 auto", width: "90%"}}>
             
             <div className="mb-4" style={{position: 'relative'}}>
-                <form className="d-flex">
+                <form className="d-flex" autoComplete="off">
                     <input
                         name="search"
                         type="text"
@@ -252,6 +254,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                             )}
                         </select>
                         <input
+                            autoComplete="off"
                             id="cals"
                             name="cals"
                             type="number"
