@@ -31,14 +31,36 @@ export default function RecipeForm() {
 
     useEffect(() => {
         if(isEditing) {
-            const recipeToEdit = data.foods.find(f => f.id === params.id);
-            // eslint-disable-next-line no-unused-vars
-            const { id, ...rest } = recipeToEdit;
-            setForm(rest);
+            const recipeToEdit = data.foods.find(f => f.id === Number(params.id));
+            if(!recipeToEdit) return;
+
+            const recipeIngredients = data.food_ingredients
+                .filter(fi => fi.food_id === recipeToEdit.id)
+                .map(fi => {
+                    const ingredient = data.ingredients.find(i => i.id === fi.ingredient_id);
+                    return {
+                        ...ingredient,
+                        amount: fi.amount,
+                        addToShoppingList: fi.addToShoppingList
+                    }
+                });
+            const recipeKeywords = data.recipe_keywords
+                .filter(rk => rk.recipe_id === recipeToEdit.id)
+                .map(rk => {
+                    const kw = data.keywords.find(k => k.id === rk.keyword_id);
+                    return kw?.keyword || "";
+                });
+            
+            setForm({
+                name: recipeToEdit.name,
+                ingredients: recipeIngredients,
+                description: recipeToEdit.description,
+                portions: recipeToEdit.portions,
+                keywords: recipeKeywords,
+            });
         }
     }, [isEditing, data, params.id]);
     
-
     const [ingredientAmount, setIngredientAmount] = useState('');
 
     const [searchInput, setSearchInput] = useState('');
@@ -110,7 +132,9 @@ export default function RecipeForm() {
             return;
         }
 
-        addToRecipes(form, isEditing);
+        const existingId = isEditing ? Number(params.id) : -1;
+
+        addToRecipes(form, isEditing, existingId);
 
         if(isEditing) navigate(`/recipe/${params.id}`);
         setForm({name: '', ingredients: [], description: [''], portions: 4, keywords: []});
@@ -124,10 +148,10 @@ export default function RecipeForm() {
     const handleKeywordClicked = (id) => {
         let newKeyword = '';
         if(id === -1) {
-            newKeyword = keywordSearch.charAt(0).toUpperCase() + keywordSearch.split(1);
+            newKeyword = keywordSearch.charAt(0).toUpperCase() + keywordSearch.slice(1);
         } else {
             const kw = data.keywords.find(k => k.id === id).keyword;
-            newKeyword = kw.charAt(0).toUpperCase + kw.split(1);
+            newKeyword = kw.charAt(0).toUpperCase() + kw.slice(1);
         }
         if(!form.keywords.includes(newKeyword)) setForm(prev => ({...prev, keywords: [...prev.keywords, newKeyword]}));
         setKeywordSearch('');

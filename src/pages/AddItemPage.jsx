@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, deleteDoc } from "firebase/firestore";
 
 import { Link, Outlet } from "react-router-dom";
 import { useLocation } from "react-router-dom";
@@ -38,8 +38,17 @@ export default function AddItemPage({data, setData, isGuestMode}) {
         }
     };
 
-    // TODO: if item name exists already, replace it
-    // currently, nothing happens if name exists
+    const deleteRelationsDb = async (ingredients, keywords) => {
+        if(!isGuestMode) {
+            await Promise.all(ingredients.map((item) => (
+                deleteDoc(doc(db, "food_ingredients", item.toString()))
+            )))
+            await Promise.all(keywords.map((item) => (
+                deleteDoc(doc(db, "recipe_keywords", item.toString()))
+            )))
+        }
+    };
+
     const addToIngredients = (itemToAdd) => {
 
         const newCals = parseFloat(itemToAdd.cals) || 0;
@@ -68,25 +77,65 @@ export default function AddItemPage({data, setData, isGuestMode}) {
         return newId;
     }
 
-    const addToRecipes = (itemToAdd, isEditing) => {
+    const addToRecipes = (itemToAdd, isEditing, existingId) => {
 
-        const newId = Math.max(...data.foods.map(item => item.id || 0), 0) + 1;
+        let ingredientIdsToDelete = [];
+        let keywordIdsToDelete = [];
+        let ingredientsToUpdate = [];
+        let keywordsToUpdate = [];
+        if(isEditing) {
+
+            let oldIngredients = data.food_ingredients.filter(i => i.food_id === existingId);
+            let oldKeywords = data.recipe_keywords.filter(i => i.recipe_id === existingId);
+
+            oldIngredients.forEach((ingredient) => {
+                let foundIngredient = itemToAdd.ingredients.find(i => i.id === ingredient.ingredient_id);
+                if(foundIngredient) {
+                    ingredientsToUpdate.push({relationId: ingredient.id, ingredientId: ingredient.ingredient_id});
+                } else {
+                    ingredientIdsToDelete.push(ingredient.id);
+                }
+            })
+            oldKeywords.forEach((kw) => {
+                let foundKeyword = itemToAdd.keywords.find(i => i === kw.keyword);
+                if(foundKeyword) {
+                    keywordsToUpdate.push({relationId: kw.id, keywordId: kw.keyword_id});
+                } else {
+                    keywordIdsToDelete.push(kw.id);
+                }
+            })
+
+            // clear all existing relations 
+            setData(prev => ({
+                ...prev,
+                foods: prev.foods.filter(i => i.id !== existingId),
+                food_ingredients: prev.food_ingredients.filter(i => i.food_id !== existingId),
+                recipe_keywords: prev.recipe_keywords.filter(i => i.recipe_id !== existingId)
+            }))
+        }
+        
+        const newId = isEditing ? existingId : (Math.max(...data.foods.map(item => item.id || 0), 0) + 1);
         const newName = itemToAdd.name.charAt(0).toUpperCase() + itemToAdd.name.slice(1);
         const newRecipe = {id: newId, name: newName, 
                 description: itemToAdd.description, portions: itemToAdd.portions};
 
-        if(data.foods.find(i => i.name === itemToAdd.name)){
+        if(!isEditing && data.foods.find(i => i.name === itemToAdd.name)){
             console.log(itemToAdd.name +" finns redan");
             return;
         }
 
-        const newIngredients = itemToAdd.ingredients.map((ingredient, index) =>({
-            id: Math.max(...data.food_ingredients.map(item => item.id || 0), 0) + 1 + index,
-            food_id: newId,
-            ingredient_id: ingredient.id,
-            amount: ingredient.amount,
-            addToShoppingList: ingredient.addToShoppingList
-        }));
+        const newIngredients = itemToAdd.ingredients.map((ingredient, index) =>{
+
+            const existingRelation = ingredientsToUpdate.find(u => u.ingredientId === ingredient.id);
+
+            return {
+                id: existingRelation ? existingRelation.relationId : (Math.max(...data.food_ingredients.map(item => item.id || 0), 0) + 1 + index),
+                food_id: newId,
+                ingredient_id: ingredient.id,
+                amount: ingredient.amount,
+                addToShoppingList: ingredient.addToShoppingList
+            }
+        });
 
         const newKeywords = [];
         const newKeywordRelations = [];
@@ -102,8 +151,10 @@ export default function AddItemPage({data, setData, isGuestMode}) {
                 newKeywords.push({id: keywordId, keyword: word});
             }
 
+            const oldRelation = keywordsToUpdate.find(kw => kw.keywordId === keywordId);
+
             newKeywordRelations.push({
-                id: Math.max(...data.recipe_keywords.map(rk => rk.id ||0), 0) + 1 + index,
+                id: oldRelation ? oldRelation.id : Math.max(...data.recipe_keywords.map(rk => rk.id ||0), 0) + 1 + index,
                 recipe_id: newId,
                 keyword_id: keywordId 
             })
@@ -117,6 +168,14 @@ export default function AddItemPage({data, setData, isGuestMode}) {
             recipe_keywords: [...prev.recipe_keywords, ... newKeywordRelations],
             keywords: [...prev.keywords, ...newKeywords]
         }));
+
+        if(isEditing) {
+            deleteRelationsDb(ingredientIdsToDelete, keywordIdsToDelete).catch((err) =>
+                console.log("could not delete relations", err)
+            );
+        }
+
+        console.log(...newKeywordRelations);
 
         // add to real DB
         addFoodDB(newRecipe).catch((err) => 
