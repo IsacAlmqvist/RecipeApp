@@ -1,4 +1,4 @@
-export default function IngredientList({listItems = [], deleteButton = false, onDelete = () => {}, onToggle}) {
+export default function IngredientList({listItems = [], deleteButton = false, onDelete = () => {}, onToggle, inShoppingList = false, onMarkedDone, shoppingListData}) {
 
     return (
         <div className="mb-1">
@@ -10,11 +10,26 @@ export default function IngredientList({listItems = [], deleteButton = false, on
                 )}
                 {listItems.map((item, index) => (
                     <li
-                        className={`d-flex p-1 align-items-center ${index !== 0 && "border-top"}`} key={index}
+                        className={`d-flex p-1 align-items-center ${index !== 0 && "my-list-border"}`} key={index} style={{fontSize: '15px'}}
                     >
                         <div className="me-3" style ={{flexBasis:'150px', textAlign: 'left'}}>{item.name}</div>
                         <div className= "me-1" style ={{flexBasis:'36px', textAlign: 'left'}}>{item.amount > 0 && item.amount}</div>
                         <div className= "me-2" style ={{flexBasis: '30px', textAlign: 'left'}}>{item.amount > 0 && item.unit}</div>
+
+                        {inShoppingList && (
+                            <div
+                                onClick={() => onMarkedDone(item.id)}
+                                style={{
+                                    marginLeft: 'auto',
+                                    marginRight: '8px',
+                                    width: '16px',
+                                    height: '16px',
+                                    borderRadius: '50%',
+                                    backgroundColor: !shoppingListData.find(i => i.id === item.id).markedDone ? 'transparent' : 'grey',
+                                    border: '1px solid black'
+                                }}
+                            />
+                        )}
 
                         {onToggle && (
                             <div

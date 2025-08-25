@@ -1,8 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export default function BottomNav({onHomeClick}) {
-    const location = useLocation();
-    const current = location.pathname;
 
     return (
         <nav style={{

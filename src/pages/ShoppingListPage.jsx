@@ -1,11 +1,11 @@
 import IngredientList from "../components/IngredientList";
 import { useState } from "react";
 import SearchedIngredientList from "../components/SearchedIngredientList";
-
-// import { useEffect } from "react";
+import { useRef } from "react";
+import { useEffect } from "react";
 
 import { db } from "../firebase";
-import { collection, doc, getDocs, deleteDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDocs, deleteDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 
 export default function ShoppingListPage({data, setData, isGuestMode}) {
 
@@ -33,6 +33,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
     const [selectedCetegory, setSelectedCategory] = useState('kolonial');
     const [selectedCals, setSelectedCals] = useState('');
     const [searchInput, setSearchInput] = useState('');
+    const [showDeletePrompt, setShowDeletePrompt] = useState(false);
 
     const [timers, setTimers] = useState({});
 
@@ -116,7 +117,7 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
         } else { // add new ingredient to shopping list
             setData( prev => ({
                 ...prev,
-                shopping_list: [...prev.shopping_list, {id: id, amount: finalAmount}]
+                shopping_list: [...prev.shopping_list, {id: id, amount: finalAmount, markedDone: false}]
             }));
         }
 
@@ -149,7 +150,6 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
                 deleteDoc(doc(db, "shopping_list", docSnap.id))
             );
             await Promise.all(deletePromises);
-            console.log("Deleted shopping list from database!");
         }
     }
 
@@ -184,6 +184,65 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
             category: ingredientFound.category
         })
     }
+
+    const handleMarkedDone = (itemId) => {
+        setData((prev) => {
+            const item = prev.shopping_list.find(i => i.id === itemId);
+            if(!item) return prev;
+
+            const newValue = !item.markedDone;
+
+            markDoneDb(itemId, newValue);
+
+            return {
+                ...prev,
+                shopping_list: prev.shopping_list.map(i => 
+                    i.id === itemId ? {...i, markedDone: newValue} : i
+                )
+            };
+        });
+    }
+
+    const markDoneDb = async (itemId, value) => {
+        const docRef = doc(db, "shopping_list", itemId.toString());
+
+        await updateDoc(docRef, {
+            markedDone: value
+        });
+    }
+
+    const clearMarkedItems = () => {
+        const itemsToDelete = data.shopping_list.filter(i => i.markedDone);
+
+        setData((prev) => ({
+            ...prev,
+            shopping_list: prev.shopping_list.filter(i => !i.markedDone)
+        }));
+
+        clearMarkedItemsDb(itemsToDelete);
+    }
+
+    const clearMarkedItemsDb = async (itemsToDelete) => {
+        const batch = writeBatch(db);
+
+        itemsToDelete.forEach(item => {
+            const ref = doc(db, "shopping_list", item.id.toString());
+            batch.delete(ref);
+        });
+        await batch.commit();
+    }
+
+    const ref = useRef();
+    
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if(ref.current && !ref.current.contains(e.target)) {
+                setShowDeletePrompt(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const categories = ['kolonial', 'frukt och grönt', 'kött och chark', 'mejeri', 'bröd', 'frys', 'övrigt'];
 
@@ -278,13 +337,30 @@ export default function ShoppingListPage({data, setData, isGuestMode}) {
 
                 return (
                     <div key = {category}>
-                        <p className="mb-1 ps-2 mt-3"><b>{category.charAt(0).toUpperCase() + category.slice(1)}</b></p>
-                        <IngredientList listItems={filtered} />
+                        <p className="mb-1 ps-1 mt-3"><b>{category.charAt(0).toUpperCase() + category.slice(1)}</b></p>
+                        <IngredientList listItems={filtered} onMarkedDone={handleMarkedDone} inShoppingList={true} shoppingListData={data.shopping_list}/>
                     </div>
                 );
             })}
 
-            <button onClick={() => clearShoppingList()} className="btn btn-secondary mt-4">Rensa inköpslista</button>
+            <div style={{width:'90%', margin: '0 auto'}} className="d-flex">
+                <button onClick={() => clearMarkedItems()} style={{width:'50%', textAlign: 'left'}} className="btn btn-secondary mt-4">Rensa markerade</button>
+                { showDeletePrompt ? (
+                    <div style={{width: '50%'}} className="d-flex btn btn-secondary mt-4 pe-0">
+                        <div>Säker?</div>
+                        <button
+                            ref={ref}
+                            style={{borderRadius: '6px', border: '1px solid currentColor', width: '24px', height:'24px', margin: 'auto 8px auto auto'}} 
+                            className="btn d-flex align-items-center justify-content-center"
+                            onClick={() => clearShoppingList()}
+                        >
+                            <i className="bi bi-check-lg fs-4 text-success"/>
+                        </button>
+                    </div>
+                ) : (
+                    <button style={{width: '50%', textAlign:'left'}} onClick={() => setShowDeletePrompt(true)} className="btn btn-secondary mt-4 text-color-danger">Rensa allt</button>
+                )}
+            </div>
         </div>
     );
 }

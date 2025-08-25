@@ -378,7 +378,7 @@ export default function RecipeForm() {
                 </>
             }
 
-            <button type="button" onClick={(e) => {e.preventDefault(); handleSubmit();}} className="mt-4 btn btn-primary">Lägg till</button>
+            <button type="button" onClick={(e) => {e.preventDefault(); handleSubmit();}} className="mt-4 mb-2 btn btn-primary">{isEditing ? "Spara" : "Lägg till"}</button>
 
         </form>
 

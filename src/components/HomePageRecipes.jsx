@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { db } from "../firebase";
 import { setDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
-import { Link } from "react-router-dom";
 
 export default function HomePageRecipes({listItems, data, setData, isGuestMode, onListItemClicked}) {
 
@@ -66,7 +65,7 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
                     changedItems.push({...foundItem});
                 }
             } else {
-                const newItem = {id: ing.ingredient_id, amount: Math.max(0, amountToAdd)}
+                const newItem = {id: ing.ingredient_id, amount: Math.max(0, amountToAdd), markedDone: false}
                 shoppingListCopy.push(newItem);
                 changedItems.push(newItem);
             }
@@ -89,7 +88,7 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
             return;
         }
 
-        const newPlanned = {id: id, portions: pendingPlanned[id]};
+        const newPlanned = {id: id, portions: pendingPlanned[id], markedDone: false};
         const alreadyPlanned = data.planned_food.find(i => i.id === id);
         const portionDiff = newPlanned.portions - (alreadyPlanned?.portions || 0);
 
@@ -163,14 +162,14 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
                 {listItems.map((item) => (
                     <li
                         key={item.id}
-                        className={"d-flex list-group-item"}
+                        className={"d-flex list-group-item align-items-center"}
                         onClick={() => onListItemClicked(item.id)}
                     >
                         <div style ={{textAlign: 'left'}}>{item.name}</div>
                         {pendingPlanned[item.id] !== undefined &&
                             (
-                                <div className="d-flex ms-auto me-2">
-                                    <button type="button" className="btn btn-sm btn-outline-secondary" 
+                                <div style={{height: '32px'}} className="d-flex ms-auto me-2">
+                                    <button type="button" className="btn btn-sm btn-outline-secondary button-portions" 
                                         onClick={(e) => {
                                             e.stopPropagation(); 
                                             adjustPortions(item.id, -1);}}
@@ -180,13 +179,12 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
                                     <input
                                         name="portions"
                                         type="number"
-                                        className="form-control"
+                                        className="form-control input-portion"
                                         value={pendingPlanned[item.id]}
                                         readOnly
-                                        style={{width: '25px', textAlign: 'center', padding: '4px 0'}}
                                         onClick={(e) => {e.stopPropagation();}}
                                     />
-                                    <button type="button" className="btn btn-sm btn-outline-secondary" 
+                                    <button type="button" className="btn btn-sm btn-outline-secondary button-portions" 
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             adjustPortions(item.id, 1);}}

@@ -66,7 +66,7 @@ export default function HomePage({data, setData, isGuestMode}) {
                 <div style={{flex:'1'}}>
                     <SearchBar input={searchInput} setInput={setSearchInput} />
                 </div>
-                <div ref={ref} style={{position:'relative', width:'120px'}}>
+                <div ref={ref} style={{position:'relative', width:'140px'}}>
                     <button
                         name="filter"
                         className='formSelect input-group-text'

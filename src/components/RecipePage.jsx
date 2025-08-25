@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 
 import { db } from "../firebase";
 import { doc, deleteDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 
 export default function RecipePage({data, setData, isGuestMode}) {
@@ -28,6 +28,8 @@ export default function RecipePage({data, setData, isGuestMode}) {
         });
     
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from;
 
     const editRecipe = () => {
         navigate(`/addItem/edit-recipe/${recipe.id}`)
@@ -77,12 +79,20 @@ export default function RecipePage({data, setData, isGuestMode}) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const handleGoBack = () => {
+        if(from === "notHome") {
+            navigate("/plannedFood");
+        } else {
+            navigate("/");
+        }
+    }
+
     if(!recipe) return <></>;
 
     return (
         <>
             <div className="d-flex" style={{width:'90%', margin: '20px auto 0 auto'}}>
-                <button type="button" onClick={() => navigate("/")} 
+                <button type="button" onClick={() => handleGoBack()} 
                         className="btn btn-sm rounded-circle btn-outline-dark me-auto d-flex align-items-center justify-content-center"
                         style={{width: '32px', height:'32px', paddingRight:'10px'}}>
                     <i className="bi bi-chevron-left fs-6"></i>

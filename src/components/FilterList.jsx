@@ -10,9 +10,9 @@ export default function FilterList({listItems, selectedFilters, toggleItemMarked
                             key={item.id}
                             className="list-group-item d-flex"
                             onClick={() => {toggleItemMarked(item.id);}}
-                            style={{paddingTop:'4px', paddingBottom:'4px'}}
+                            style={{paddingTop:'4px', paddingBottom:'4px', paddingLeft:'10px'}}
                         >
-                            <div className="me-3" style ={{textAlign: 'left'}}>{item.keyword}</div>
+                            <div className="me-3" style ={{textAlign: 'left', fontSize: '14px'}}>{item.keyword}</div>
                             <input type="checkbox" checked={isSelected} readOnly style={{ pointerEvents: "none", textAlign:'right', marginLeft:'auto'}}/>
                         </li>
                     )

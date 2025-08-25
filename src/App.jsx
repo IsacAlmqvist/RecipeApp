@@ -21,14 +21,15 @@ import IngredientForm from './components/IngredientForm';
 function AppLayout({ isGuestMode }) {
 
   /* TODO
-    - edit recipes (and ingredients/keywords) (dont allow removing directly to ruin recipes)
-      - only thing left here: adapt the addToRecipes or make a new function replaceRecipe (needs to check for existing relations)
+    - when backing from recipe, go to plannedfoodpage if you came from there
+    - edit recipes -DONE
+    - edit ingredients, inside addIngredient, you can search for ingredient at the bottom and then edit from there
     - small thing: when you go back from receipe and came from planned food page, go there
     - remove recipes (which removes relations also) - DONE
     - filter search by keywords - DONE
     - format the recipe description
     - removing/checking of planned meals
-    - removing/checking of from shopping list
+    - removing/checking of from shopping list -DONE
     - historical DB for recipe and ingredient history (maybe filter search by popularity)
   */
 
@@ -132,23 +133,22 @@ function AppLayout({ isGuestMode }) {
   const refreshHome = () => setHomeKey(prev => prev + 1);
   
   return (
-    <div>
-      <Routes>
-        <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}/>
-        <Route path = "/recipe/:id" element = {<RecipePage data={data} setData={setData} isGuestMode={isGuestMode}/>}/>
-
-        <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}>
-          <Route index element = {<Navigate to="recipe" replace />}/>
-          <Route path = "edit-recipe/:id" element = {<RecipeForm />}/>
-          <Route path = "recipe" element = {<RecipeForm />}/>
-          <Route path = "ingredient" element = {<IngredientForm />}/>
-        </Route>
-
-        <Route path = "/shoppingList" element = {<ShoppingListPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
-        <Route path = "/plannedFood" element = {<PlannedFoodPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
-      </Routes>
-
-      <BottomNav onHomeClick={refreshHome} />
+    <div className = "body" style ={{paddingBottom:"100px", minHeight: "100vh", overflowX: "hidden"}}>
+      <div style={{maxWidth: "550px", margin: "0 auto"}}>
+        <Routes>
+          <Route path = "/" element = {<HomePage key={homeKey} data={data} setData={setData}/>}/>
+          <Route path = "/recipe/:id" element = {<RecipePage data={data} setData={setData} isGuestMode={isGuestMode}/>}/>
+          <Route path = "/addItem" element = {<AddItemPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}>
+            <Route index element = {<Navigate to="recipe" replace />}/>
+            <Route path = "edit-recipe/:id" element = {<RecipeForm />}/>
+            <Route path = "recipe" element = {<RecipeForm />}/>
+            <Route path = "ingredient" element = {<IngredientForm />}/>
+          </Route>
+          <Route path = "/shoppingList" element = {<ShoppingListPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
+          <Route path = "/plannedFood" element = {<PlannedFoodPage data = {data} setData={setData} isGuestMode={isGuestMode}/>}/>
+        </Routes>
+        <BottomNav onHomeClick={refreshHome} />
+      </div>
     </div>
   );
 }

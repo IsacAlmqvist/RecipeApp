@@ -1,9 +1,15 @@
 import PlannedRecipeList from "../components/PlannedRecipeList";
 
+import { useEffect } from "react";
+import { useRef } from "react";
+import { useState } from "react";
+
 import { db } from "../firebase";
-import { collection, doc, getDocs, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDocs, deleteDoc, updateDoc, writeBatch } from "firebase/firestore";
 
 export default function PlannedFoodPage({data, setData, isGuestMode}) {
+
+    const [showDeletePrompt, setShowDeletePrompt] = useState(false);
 
     const clearPlannedFoodDb = async () => {
         if(!isGuestMode) {
@@ -38,11 +44,87 @@ export default function PlannedFoodPage({data, setData, isGuestMode}) {
         })
     }
 
+    const handleMarkedDone = (itemId) => {
+            setData((prev) => {
+                const item = prev.planned_food.find(i => i.id === itemId);
+                if(!item) return prev;
+    
+                const newValue = !item.markedDone;
+    
+                markDoneDb(itemId, newValue);
+    
+                return {
+                    ...prev,
+                    planned_food: prev.planned_food.map(i => 
+                        i.id === itemId ? {...i, markedDone: newValue} : i
+                    )
+                };
+            });
+        }
+    
+        const markDoneDb = async (itemId, value) => {
+            const docRef = doc(db, "planned_food", itemId.toString());
+    
+            await updateDoc(docRef, {
+                markedDone: value
+            });
+        }
+    
+        const clearMarkedItems = () => {
+            const itemsToDelete = data.planned_food.filter(i => i.markedDone);
+    
+            setData((prev) => ({
+                ...prev,
+                planned_food: prev.planned_food.filter(i => !i.markedDone)
+            }));
+    
+            clearMarkedItemsDb(itemsToDelete);
+        }
+    
+        const clearMarkedItemsDb = async (itemsToDelete) => {
+            const batch = writeBatch(db);
+    
+            itemsToDelete.forEach(item => {
+                const ref = doc(db, "planned_food", item.id.toString());
+                batch.delete(ref);
+            });
+            await batch.commit();
+        }
+    
+        const ref = useRef();
+        
+        useEffect(() => {
+            function handleClickOutside(e) {
+                if(ref.current && !ref.current.contains(e.target)) {
+                    setShowDeletePrompt(false);
+                }
+            }
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => document.removeEventListener("mousedown", handleClickOutside);
+        }, []);
+
     return (
         <div style={{margin: "50px auto 0 auto", width: "90%"}}>
-            <PlannedRecipeList listItems={plannedFood} />
+            <PlannedRecipeList listItems={plannedFood} plannedFoodData={data.planned_food} onMarkedDone={handleMarkedDone}/>
             
-            <button onClick={() => clearPlannedFood()} className="btn btn-secondary">Rensa måltider</button>
+            <div style={{width:'90%', margin: '0 auto'}} className="d-flex">
+                <button onClick={() => clearMarkedItems()} style={{width:'50%', textAlign: 'left'}} className="btn btn-secondary mt-4">Rensa markerade</button>
+                { showDeletePrompt ? (
+                    <div style={{width: '50%'}} className="d-flex btn btn-secondary mt-4 pe-0">
+                        <div>Säker?</div>
+                        <button
+                            ref={ref}
+                            style={{borderRadius: '6px', border: '1px solid currentColor', width: '24px', height:'24px', margin: 'auto 8px auto auto'}} 
+                            className="btn d-flex align-items-center justify-content-center"
+                            onClick={() => clearPlannedFood()}
+                        >
+                            <i className="bi bi-check-lg fs-4 text-success"/>
+                        </button>
+                    </div>
+                ) : (
+                    <button style={{width: '50%', textAlign:'left'}} onClick={() => setShowDeletePrompt(true)} className="btn btn-secondary mt-4 text-color-danger">Rensa allt</button>
+                )}
+            </div>
         </div>
     );
 }
