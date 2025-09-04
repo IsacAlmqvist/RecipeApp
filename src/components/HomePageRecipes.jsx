@@ -159,13 +159,13 @@ export default function HomePageRecipes({listItems, data, setData, isGuestMode, 
     return (
         <div style={{margin: '0 auto'}} className="mt-4">
             <ul className = "list-group d-flex">
-                {listItems.map((item) => (
+                {listItems.map((item,index) => (
                     <li
                         key={item.id}
-                        className={"d-flex list-group-item align-items-center"}
+                        className={`d-flex align-items-center ${index !== 0 && "my-list-border"}`}
                         onClick={() => onListItemClicked(item.id)}
                     >
-                        <div style ={{textAlign: 'left'}}>{item.name}</div>
+                        <div style ={{textAlign: 'left', padding:'10px'}}>{item.name}</div>
                         {pendingPlanned[item.id] !== undefined &&
                             (
                                 <div style={{height: '32px'}} className="d-flex ms-auto me-2">

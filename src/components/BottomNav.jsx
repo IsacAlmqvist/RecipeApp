@@ -5,7 +5,7 @@ export default function BottomNav({onHomeClick}) {
     return (
         <nav style={{
             position: 'fixed', bottom: 0, left: 0, right: 0,
-            background: '#fff', borderTop: '1px solid #ccc',
+            borderTop: '1px solid #ccc',
             display: 'flex', justifyContent: 'space-around', padding: '0.5rem',
             paddingBottom: '32px'
         }}>

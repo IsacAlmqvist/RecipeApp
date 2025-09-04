@@ -1,7 +1,7 @@
 :root {
-    --background-color: #b9b9b996;
-    --primary-color: #5b5b5b7c;
-    --text-color: #303030b5; 
+    --background-color: #d2b38674;
+    --primary-color: #987a4d76;
+    --text-color: #262626d4; 
 }
 
 .body {
@@ -9,6 +9,7 @@
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
+  color: var(--text-color);
 }
 
 button.btn {

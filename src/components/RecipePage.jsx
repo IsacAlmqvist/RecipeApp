@@ -16,14 +16,16 @@ export default function RecipePage({data, setData, isGuestMode}) {
     const [showMenu, setShowMenu] = useState(false);
     const [showDeletePrompt, setShowDeletePrompt] = useState(false);
 
-    const ingreientList = data.food_ingredients
+    const [portions, setPortions] = useState(recipe.portions);
+
+    const ingredientList = data.food_ingredients
         .filter(fi => fi.food_id === itemId)
         .map(fi => {
             const ingredient = data.ingredients.find(i => i.id === fi.ingredient_id);
             return {
                 name: ingredient.name,
                 unit: ingredient.unit,
-                amount: fi.amount
+                amount: Math.round(fi.amount * (portions / recipe.portions) * 100) / 100
             }
         });
     
@@ -141,21 +143,48 @@ export default function RecipePage({data, setData, isGuestMode}) {
                 </div>
             </div>
 
-            <h1 className="text-center mt-4 mb-4">
-            {recipe.name}
-            </h1>
+            <div className="d-flex" style={{width:'90%', margin:'0 auto'}}>
 
-            <div style={{ width: '90%', margin: '0 auto'}}>
-                <IngredientList listItems={ingreientList} />
+                <h1 className="text-center mt-4 mb-4">
+                {recipe.name}
+                </h1>
+
+                <div style={{display: 'flex', marginTop: '40px', marginLeft:'auto', height: '30px'}}>
+                    <button type="button" className="btn btn-sm btn-outline-secondary"
+                        onClick={() => setPortions(portions-1 || 1)}
+                        style={{width:'24px'}}
+                    >
+                        -
+                    </button>
+                    <input
+                        id="portions"
+                        name="portions"
+                        type="number"
+                        className="form-control"
+                        value={portions}
+                        readOnly
+                        style={{width: '32px', textAlign: 'center', padding: '4px 0'}}
+                    />
+                    <button type="button" className="btn btn-sm btn-outline-secondary"
+                        onClick={() => setPortions(portions+1)}
+                        style={{width:'24px'}}
+                    >
+                        +
+                    </button>
+                </div>
             </div>
 
-            {/* <ul className="list-group">
+            <div style={{ width: '90%', margin: '0 auto'}}>
+                <IngredientList listItems={ingredientList}/>
+            </div>
+
+            <ul className="mt-3" style={{width:"90%", margin: '0 auto'}}>
                 {recipe.description.map((item, index) => (
-                    <li className="list-group-item" key={index}>
+                    <li className="" key={index}>
                         {item}
                     </li>
                 ))}
-            </ul> */}
+            </ul>
         </>
     );
 }

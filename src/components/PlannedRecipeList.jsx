@@ -6,6 +6,7 @@ export default function PlannedRecipeList ({listItems = [], plannedFoodData, onM
 
     return (
         <div className="mt-2 mb-1">
+            {listItems.length === 0? (<h2 style={{width:'90%', margin:'0 auto', marginBottom:'30px', marginTop:'20px'}}>Inget planerat ännu</h2>) : (
             <ul className = "list-group">
                 {listItems.map((item, index) => (
                     <li
@@ -32,7 +33,7 @@ export default function PlannedRecipeList ({listItems = [], plannedFoodData, onM
                         />
                     </li>
                 ))}
-            </ul>
+            </ul> )}
         </div>
     );
 }

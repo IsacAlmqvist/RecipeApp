@@ -217,7 +217,7 @@ export default function RecipeForm() {
         {isEditing &&
             <button type="button" onClick={() => navigate(`/recipe/${params.id}`)} 
                 className="btn btn-sm rounded-circle btn-outline-dark me-auto d-flex align-items-center justify-content-center"
-                style={{width: '32px', height:'32px', paddingRight:'10px', position:'fixed'}}
+                style={{width: '32px', height:'32px', paddingRight:'10px', position:'fixed', marginLeft:'20px', marginTop:'-30px'}}
             >
                 <i className="bi bi-chevron-left fs-6"></i>
             </button>
@@ -285,10 +285,7 @@ export default function RecipeForm() {
                 </>
             }
 
-            <div className="mb-4 mt-3">
-                <label className="form-label fw-bold">
-                    Steg:
-                </label>
+            <div className="mb-4" style={{marginTop:"32px"}}>
                 {form.description.map((step, index) => (
                     <div className="d-flex align-items-center mb-2" key={index}>
                         <input
@@ -302,10 +299,10 @@ export default function RecipeForm() {
                         <button 
                             type = "button"
                             className="btn btn-sm ms-2 p-0 d-flex align-items-center justify-content-center"
-                            style={{ width: "20px", height: "19px"}}
+                            style={{ width: "20px", height: "19px", border:"none", backgroundColor:"transparent"}}
                             onClick={() => deleteStep(index)}
                         >
-                            <i className="bi bi-x fs-6 text-danger"></i>
+                            <i className="bi bi-x fs-5 text-danger"></i>
                         </button>
                     </div>
                 ))}
@@ -351,10 +348,6 @@ export default function RecipeForm() {
             </div>
 
             <div>
-                <label htmlFor="keywords" className="form-label">
-                    Nyckelord
-                </label>
-
                 {form.keywords.length > 0 && <WordList listItems={form.keywords} onDelete={deleteKeyword} />}
                 
                 <div className="d-flex">
@@ -374,7 +367,7 @@ export default function RecipeForm() {
 
             {keywordSearch !== '' && 
                 <>
-                    <SearchedKeywordList listItems = {data.keywords.filter(w => w.keyword.includes(keywordSearch.toLowerCase()))} onSelectItem = {handleKeywordClicked} />
+                    <SearchedKeywordList listItems = {data.keywords.filter(w => w.keyword.toLowerCase().includes(keywordSearch.toLowerCase()))} onSelectItem = {handleKeywordClicked} />
                 </>
             }
 
